@@ -7,7 +7,7 @@ locals {
         tags = merge(
           try(config.tags, {}),
           {
-            "k8s.io/cluster-autoscaler/enabled"               = "true"
+            "k8s.io/cluster-autoscaler/enabled"              = "true"
             "k8s.io/cluster-autoscaler/${local.name_prefix}" = "owned"
           }
         )
@@ -38,7 +38,7 @@ module "eks" {
 
   enable_irsa = true
 
-  cluster_addons = {
+  addons = {
     coredns = {
       most_recent = true
     }

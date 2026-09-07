@@ -1,5 +1,5 @@
 module "irsa_cluster_autoscaler" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
 
   name = "${local.name_prefix}-cluster-autoscaler"
@@ -18,7 +18,7 @@ module "irsa_cluster_autoscaler" {
 }
 
 module "irsa_aws_load_balancer_controller" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
 
   name = "${local.name_prefix}-aws-load-balancer-controller"

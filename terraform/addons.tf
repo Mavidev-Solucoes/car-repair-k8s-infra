@@ -1,11 +1,11 @@
-resource "kubernetes_namespace" "platform" {
+resource "kubernetes_namespace_v1" "platform" {
   for_each = toset(var.application_namespaces)
 
   metadata {
     name = each.value
 
     labels = {
-      environment                 = var.environment
+      environment                    = var.environment
       "app.kubernetes.io/managed-by" = "terraform"
     }
   }
@@ -52,7 +52,7 @@ resource "helm_release" "cluster_autoscaler" {
 
   set {
     name  = "rbac.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.irsa_cluster_autoscaler.iam_role_arn
+    value = module.irsa_cluster_autoscaler.arn
   }
 
   set {
@@ -102,7 +102,7 @@ resource "helm_release" "aws_load_balancer_controller" {
 
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.irsa_aws_load_balancer_controller.iam_role_arn
+    value = module.irsa_aws_load_balancer_controller.arn
   }
 
   set {

@@ -15,10 +15,10 @@ output "oidc_provider_arn" {
 
 output "aws_load_balancer_controller_role_arn" {
   description = "IRSA role ARN for the AWS Load Balancer Controller."
-  value       = module.irsa_aws_load_balancer_controller.iam_role_arn
+  value       = module.irsa_aws_load_balancer_controller.arn
 }
 
 output "cluster_autoscaler_role_arn" {
   description = "IRSA role ARN for Cluster Autoscaler."
-  value       = module.irsa_cluster_autoscaler.iam_role_arn
+  value       = module.irsa_cluster_autoscaler.arn
 }

@@ -1,5 +1,5 @@
 locals {
-  name_prefix = "${var.project_name}-${var.environment}"
+  name_prefix  = "${var.project_name}-${var.environment}"
   selected_azs = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
   common_tags = {
     Environment = var.environment
