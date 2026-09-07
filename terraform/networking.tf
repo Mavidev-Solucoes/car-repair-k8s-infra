@@ -1,8 +1,8 @@
 locals {
-  project_name = "car-repair-shop"
-  resource_prefix = "car-repair-${var.environment}"
-  selected_azs = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
-  common_tags  = {
+  project_name    = var.project_name
+  resource_prefix = "${var.project_name}-${var.environment}"
+  selected_azs    = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
+  common_tags = {
     Project     = local.project_name
     Environment = var.environment
     ManagedBy   = "Terraform"
@@ -30,12 +30,12 @@ module "vpc" {
 
   private_subnet_tags = {
     "kubernetes.io/cluster/${local.resource_prefix}" = "shared"
-    "kubernetes.io/role/internal-elb"            = "1"
+    "kubernetes.io/role/internal-elb"                = "1"
   }
 
   public_subnet_tags = {
     "kubernetes.io/cluster/${local.resource_prefix}" = "shared"
-    "kubernetes.io/role/elb"                     = "1"
+    "kubernetes.io/role/elb"                         = "1"
   }
 
   tags = local.common_tags

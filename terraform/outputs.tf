@@ -1,24 +1,39 @@
-output "rds_endpoint" {
-  description = "PostgreSQL RDS endpoint."
-  value       = aws_db_instance.postgres.address
+output "cluster_name" {
+  description = "Amazon EKS cluster name."
+  value       = module.eks.cluster_name
 }
 
-output "rds_port" {
-  description = "PostgreSQL RDS port."
-  value       = aws_db_instance.postgres.port
+output "cluster_endpoint" {
+  description = "Amazon EKS cluster endpoint."
+  value       = module.eks.cluster_endpoint
 }
 
-output "rds_arn" {
-  description = "PostgreSQL RDS ARN."
-  value       = aws_db_instance.postgres.arn
+output "cluster_version" {
+  description = "Amazon EKS Kubernetes version."
+  value       = module.eks.cluster_version
 }
 
-output "secret_arn" {
-  description = "Secrets Manager ARN containing PostgreSQL credentials and connection data."
-  value       = aws_secretsmanager_secret.postgres.arn
+output "oidc_provider_arn" {
+  description = "IAM OIDC provider ARN for the cluster."
+  value       = module.eks.oidc_provider_arn
 }
 
-output "security_group_id" {
-  description = "Security group ID attached to PostgreSQL RDS."
-  value       = aws_security_group.postgres.id
+output "oidc_provider_url" {
+  description = "OIDC issuer URL for the cluster."
+  value       = module.eks.cluster_oidc_issuer_url
+}
+
+output "vpc_id" {
+  description = "VPC ID used by the cluster."
+  value       = module.vpc.vpc_id
+}
+
+output "public_subnets" {
+  description = "Public subnet IDs associated with the platform VPC."
+  value       = module.vpc.public_subnets
+}
+
+output "private_subnets" {
+  description = "Private subnet IDs associated with the platform VPC."
+  value       = module.vpc.private_subnets
 }

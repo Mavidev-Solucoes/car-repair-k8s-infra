@@ -2,46 +2,93 @@
 
 ## Objetivo do repositório
 
-Provisionar infraestrutura AWS com Terraform para suportar o Tech Challenge FIAP, com foco em base de dados PostgreSQL corporativa (RDS) e integração futura com plataforma em EKS, Kong Gateway, AWS Lambda, AWS Secrets Manager, New Relic e GitHub Actions.
+Provisionar a infraestrutura Kubernetes da plataforma Car Repair na AWS com Terraform, com foco em Amazon EKS e add-ons operacionais. A infraestrutura de banco de dados deve ser tratada separadamente em um repositório ou stack dedicada.
 
-## Arquitetura
+## Escopo da stack
 
-A stack provisiona:
+Esta stack provisiona:
 
 - VPC dedicada com sub-redes públicas e privadas
-- Cluster Amazon EKS com add-ons operacionais (IRSA, Metrics Server, Cluster Autoscaler e AWS Load Balancer Controller)
-- Banco PostgreSQL no Amazon RDS em sub-redes privadas
-- Security Group de banco desacoplado de EKS (via lista de security groups permitidos)
-- Parameter Group com logging seguro e orientado a observabilidade
-- CloudWatch Log Group para logs de PostgreSQL
-- Secret no AWS Secrets Manager com credenciais e dados de conexão
+- Cluster Amazon EKS com IRSA habilitado
+- Namespaces base para a plataforma:
+  - `kong`
+  - `newrelic`
+  - `car-repair-app`
+- Metrics Server
+- Cluster Autoscaler com auto-discovery por tags dos managed node groups
+- AWS Load Balancer Controller (ALB Controller)
+- External Secrets Operator opcional
+- Preparação para adoção futura de Kong e New Relic
 
-## Diagrama da infraestrutura
+## Arquitetura
 
 ```text
                     +------------------------------+
                     |            AWS               |
                     |                              |
                     |  +------------------------+  |
-                    |  |          VPC           |  |
+Internet/API -----> |  |          VPC           |  |
                     |  |                        |  |
-Internet/API -----> |  |  Public Subnets        |  |
+                    |  |  Public Subnets        |  |
+                    |  |    +--> ALBs          |  |
+                    |  |                        |  |
                     |  |  Private Subnets       |  |
-                    |  |    |                   |  |
                     |  |    +--> EKS Cluster    |  |
-                    |  |    +--> RDS PostgreSQL |  |
+                    |  |    +--> Node Groups    |  |
                     |  +------------------------+  |
                     |            |                 |
-                    |            +--> CloudWatch Logs
-                    |            +--> Secrets Manager
+                    |            +--> IAM OIDC / IRSA
+                    |            +--> Helm Add-ons
                     +------------------------------+
 ```
+
+## Componentes provisionados
+
+### Amazon EKS
+
+- Cluster EKS com endpoint público/privado configurável
+- Managed node groups para workloads de sistema e aplicações
+- IRSA habilitado para integrações com controllers e add-ons
+- Outputs enxutos para integração com stacks externas
+
+### ALB Controller
+
+- Implantado via Helm
+- Configurado com `clusterName`, `region`, `vpcId` e service account dedicada
+- IRSA associada ao controller para operações com ELBv2
+
+### Cluster Autoscaler
+
+Validação arquitetural aplicada:
+
+- **Auto-discovery** configurado pelo `autoDiscovery.clusterName`
+- **IAM Role** provisionada com IRSA dedicada
+- **Tags dos node groups** aplicadas automaticamente:
+  - `k8s.io/cluster-autoscaler/enabled = true`
+  - `k8s.io/cluster-autoscaler/<cluster_name> = owned`
+- **Service account** dedicada no `kube-system` com anotação `eks.amazonaws.com/role-arn`
+
+### Metrics Server
+
+- Implantado via Helm no `kube-system`
+- Base para HPA e observabilidade operacional do cluster
+
+### External Secrets
+
+- Suporte opcional controlado por `enable_external_secrets`
+- Quando habilitado, instala o External Secrets Operator via Helm
+- Preparado para integração futura com AWS Secrets Manager ou outros secret stores externos
+
+### Kong e New Relic
+
+- Namespaces `kong` e `newrelic` são criados por padrão
+- O cluster fica preparado para instalação futura desses componentes sem ajuste estrutural no bootstrap base
 
 ## Pré-requisitos
 
 - Terraform `1.12+`
 - AWS Provider `>= 6.0`
-- Credenciais AWS com permissões para VPC, EKS, IAM, RDS, CloudWatch Logs e Secrets Manager
+- Credenciais AWS com permissões para VPC, EKS, IAM e ELB
 - AWS CLI configurado para a conta/região alvo
 
 ## Como executar Terraform
@@ -62,6 +109,7 @@ terraform -chdir=environments/prod init
 
 ```bash
 terraform -chdir=environments/dev validate
+terraform -chdir=environments/prod validate
 ```
 
 ### 3) Plano
@@ -76,81 +124,56 @@ terraform -chdir=environments/dev plan
 terraform -chdir=environments/dev apply
 ```
 
-## Como criar ambiente dev
+## Ambientes
 
-```bash
-terraform -chdir=environments/dev init
-terraform -chdir=environments/dev plan
-terraform -chdir=environments/dev apply
-```
+### Dev
 
-No ambiente `dev`, o banco usa `multi_az = false` para reduzir custos.
+- NAT Gateway único
+- Node group de aplicações com instâncias Spot
+- Tag `Tier = development`
 
-## Como criar ambiente prod
+### Prod
 
-```bash
-terraform -chdir=environments/prod init
-terraform -chdir=environments/prod plan
-terraform -chdir=environments/prod apply
-```
+- NAT Gateway por AZ
+- Restrição adicional de acesso público ao endpoint do cluster
+- Node groups on-demand
+- Tag `Tier = production`
 
-No ambiente `prod`, o banco usa `multi_az = true` para alta disponibilidade.
+## Variáveis principais
 
-## Variáveis utilizadas
-
-Principais variáveis de banco:
-
-- `environment` (`dev` ou `prod`)
-- `instance_class` (formato `db.<family>.<size>`)
-- `allocated_storage` (mínimo `20`)
-- `db_name`
-- `db_username` (padrão `app_user`, não-admin)
-- `allowed_security_groups` (lista de SGs autorizados a conectar na porta 5432)
-
-A senha **não** é definida em `terraform.tfvars`, variáveis de ambiente ou código-fonte. Ela é gerada via `random_password`.
+- `environment`
+- `project_name`
+- `aws_region`
+- `kubernetes_version`
+- `vpc_cidr`
+- `public_subnet_cidrs`
+- `private_subnet_cidrs`
+- `eks_managed_node_groups`
+- `application_namespaces`
+- `enable_external_secrets`
+- `metrics_server_chart_version`
+- `cluster_autoscaler_chart_version`
+- `aws_load_balancer_controller_chart_version`
+- `external_secrets_chart_version`
 
 ## Outputs gerados
 
-- `rds_endpoint`
-- `rds_port`
-- `rds_arn`
-- `secret_arn`
-- `security_group_id`
+- `cluster_name`
+- `cluster_endpoint`
+- `cluster_version`
+- `oidc_provider_arn`
+- `oidc_provider_url`
+- `vpc_id`
+- `public_subnets`
+- `private_subnets`
 
-## Integração futura com EKS
+## Separação arquitetural
 
-A autorização de acesso ao RDS é feita por `allowed_security_groups` para evitar dependência circular com o cluster. Assim, SGs de node groups/pods podem ser adicionados posteriormente sem acoplamento direto ao módulo EKS.
+Este repositório expõe apenas artefatos necessários para a plataforma Kubernetes. Recursos de banco de dados, credenciais de banco e outputs de Secrets Manager não fazem parte desta stack e devem ser gerenciados separadamente.
 
-## Integração futura com Lambda
+## Tags padrão
 
-Funções Lambda podem recuperar credenciais e parâmetros de conexão através do segredo exportado em `secret_arn`, sem exposição de senha em código.
-
-## Integração futura com New Relic
-
-Os logs PostgreSQL são enviados para `aws_cloudwatch_log_group` e podem ser consumidos futuramente pelo New Relic via integração nativa AWS.
-
-## Segurança e governança aplicadas
-
-- Usuário padrão do banco não administrativo (`app_user`)
-- Senha gerada automaticamente por `random_password`
-- Segredo completo no Secrets Manager com:
-
-```json
-{
-  "username": "...",
-  "password": "...",
-  "engine": "postgres",
-  "host": "...",
-  "port": 5432,
-  "database": "..."
-}
-```
-
-- Logging PostgreSQL configurado com:
-  - `log_statement = "ddl"`
-  - `log_min_duration_statement = 1000`
-- Tags obrigatórias aplicadas:
-  - `Project = car-repair-shop`
-  - `Environment = <env>`
-  - `ManagedBy = Terraform`
-  - `Owner = FIAP-TechChallenge`
+- `Project = car-repair`
+- `Environment = <env>`
+- `ManagedBy = Terraform`
+- `Owner = FIAP-TechChallenge`
