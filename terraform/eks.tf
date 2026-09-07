@@ -7,7 +7,7 @@ locals {
         tags = merge(
           try(config.tags, {}),
           {
-            "k8s.io/cluster-autoscaler/enabled"              = "true"
+            "k8s.io/cluster-autoscaler/enabled"                  = "true"
             "k8s.io/cluster-autoscaler/${local.resource_prefix}" = "owned"
           }
         )

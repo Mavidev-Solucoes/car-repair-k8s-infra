@@ -1,8 +1,8 @@
 locals {
   project_name    = var.project_name
   resource_prefix = "${var.project_name}-${var.environment}"
-  selected_azs = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
-  common_tags  = {
+  selected_azs    = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
+  common_tags = {
     Project     = local.project_name
     Environment = var.environment
     ManagedBy   = "Terraform"
