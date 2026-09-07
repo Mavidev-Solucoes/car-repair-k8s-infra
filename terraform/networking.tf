@@ -1,7 +1,14 @@
 locals {
-  project_name    = var.project_name
-  resource_prefix = "${var.project_name}-${var.environment}"
-  selected_azs    = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
+  project_name                            = var.project_name
+  resource_prefix                         = "${var.project_name}-${var.environment}"
+  cluster_name                            = local.resource_prefix
+  selected_azs                            = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
+  cluster_autoscaler_namespace            = "kube-system"
+  cluster_autoscaler_service_account_name = "cluster-autoscaler"
+  cluster_autoscaler_node_group_tags = {
+    "k8s.io/cluster-autoscaler/enabled"               = "true"
+    "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned"
+  }
   common_tags = {
     Project     = local.project_name
     Environment = var.environment
@@ -29,13 +36,13 @@ module "vpc" {
   one_nat_gateway_per_az = var.enable_nat_gateway && !var.single_nat_gateway
 
   private_subnet_tags = {
-    "kubernetes.io/cluster/${local.resource_prefix}" = "shared"
-    "kubernetes.io/role/internal-elb"                = "1"
+    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"             = "1"
   }
 
   public_subnet_tags = {
-    "kubernetes.io/cluster/${local.resource_prefix}" = "shared"
-    "kubernetes.io/role/elb"                         = "1"
+    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                      = "1"
   }
 
   tags = local.common_tags

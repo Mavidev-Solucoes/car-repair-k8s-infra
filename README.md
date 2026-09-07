@@ -61,12 +61,13 @@ Internet/API -----> |  |          VPC           |  |
 
 Validação arquitetural aplicada:
 
-- **Auto-discovery** configurado pelo `autoDiscovery.clusterName`
+- **Auto-discovery** configurado pelo `autoDiscovery.clusterName`, usando exatamente o mesmo nome do cluster EKS provisionado
 - **IAM Role** provisionada com IRSA dedicada
 - **Tags dos node groups** aplicadas automaticamente:
   - `k8s.io/cluster-autoscaler/enabled = true`
   - `k8s.io/cluster-autoscaler/<cluster_name> = owned`
 - **Service account** dedicada no `kube-system` com anotação `eks.amazonaws.com/role-arn`
+- **Permissões IAM** contemplando `autoscaling:SetDesiredCapacity`, `autoscaling:TerminateInstanceInAutoScalingGroup`, `autoscaling:Describe*` e `ec2:DescribeLaunchTemplateVersions`
 
 ### Metrics Server
 
@@ -166,6 +167,68 @@ terraform -chdir=environments/dev apply
 - `vpc_id`
 - `public_subnets`
 - `private_subnets`
+- `cluster_autoscaler`
+
+## Cluster Autoscaler: funcionamento, auto-discovery e validação
+
+### Como funciona
+
+O Cluster Autoscaler observa pods pendentes e a utilização de nós do cluster para decidir quando aumentar ou reduzir a capacidade dos managed node groups. No Amazon EKS com managed node groups, ele atua sobre os Auto Scaling Groups controlados pelo serviço EKS.
+
+Nesta stack, o add-on é implantado via Helm no namespace `kube-system` e usa uma service account dedicada associada a uma IAM Role via IRSA. Isso permite que o controller escale node groups sem depender de credenciais estáticas.
+
+### Como ocorre o auto-discovery
+
+O chart é configurado com `autoDiscovery.clusterName` igual ao output `cluster_name` do próprio cluster EKS. Em paralelo, todos os managed node groups recebem automaticamente as tags abaixo:
+
+- `k8s.io/cluster-autoscaler/enabled = true`
+- `k8s.io/cluster-autoscaler/<cluster_name> = owned`
+
+Essas tags são a base para o Cluster Autoscaler identificar quais grupos pertencem ao cluster e podem ser gerenciados com segurança.
+
+### Como validar após o deploy
+
+1. Inicialize o acesso ao cluster com o nome real provisionado:
+
+   ```bash
+   aws eks update-kubeconfig --region us-east-1 --name $(terraform -chdir=environments/dev output -raw cluster_name)
+   ```
+
+2. Confira o output consolidado do Autoscaler:
+
+   ```bash
+   terraform -chdir=environments/dev output cluster_autoscaler
+   ```
+
+3. Valide a service account e a anotação IRSA:
+
+   ```bash
+   kubectl -n kube-system get serviceaccount cluster-autoscaler -o yaml
+   ```
+
+4. Verifique se o deployment está disponível:
+
+   ```bash
+   kubectl -n kube-system get deployment cluster-autoscaler
+   kubectl -n kube-system rollout status deployment/cluster-autoscaler
+   ```
+
+5. Inspecione os logs para confirmar o auto-discovery e as decisões de scale:
+
+   ```bash
+   kubectl -n kube-system logs deployment/cluster-autoscaler --tail=200
+   ```
+
+   Indicadores esperados nos logs:
+   - descoberta dos grupos de nós do cluster
+   - leitura bem-sucedida das tags de auto-discovery
+   - decisões de `scale up` e `scale down`
+
+6. Caso necessário, confirme no Terraform quais node groups estão registrados para a stack:
+
+   ```bash
+   terraform -chdir=environments/dev output cluster_autoscaler | grep managed_node_groups
+   ```
 
 ## Separação arquitetural
 

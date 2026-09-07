@@ -6,10 +6,7 @@ locals {
       {
         tags = merge(
           try(config.tags, {}),
-          {
-            "k8s.io/cluster-autoscaler/enabled"                  = "true"
-            "k8s.io/cluster-autoscaler/${local.resource_prefix}" = "owned"
-          }
+          local.cluster_autoscaler_node_group_tags
         )
       }
     )
@@ -20,7 +17,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 21.0"
 
-  name               = local.resource_prefix
+  name               = local.cluster_name
   kubernetes_version = var.kubernetes_version
 
   authentication_mode                      = "API_AND_CONFIG_MAP"

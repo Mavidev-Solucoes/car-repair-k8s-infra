@@ -37,3 +37,19 @@ output "private_subnets" {
   description = "Private subnet IDs associated with the platform VPC."
   value       = module.vpc.private_subnets
 }
+
+output "cluster_autoscaler" {
+  description = "Cluster Autoscaler settings useful for troubleshooting."
+  value = {
+    cluster_name         = local.cluster_name
+    namespace            = local.cluster_autoscaler_namespace
+    service_account_name = local.cluster_autoscaler_service_account_name
+    irsa_role_arn        = module.irsa_cluster_autoscaler.arn
+    irsa_role_name       = module.irsa_cluster_autoscaler.name
+    irsa_policy_arn      = module.irsa_cluster_autoscaler.iam_policy_arn
+    auto_discovery_tags  = local.cluster_autoscaler_node_group_tags
+    helm_chart_version   = var.cluster_autoscaler_chart_version
+    aws_region           = var.aws_region
+    managed_node_groups  = sort(keys(var.eks_managed_node_groups))
+  }
+}
