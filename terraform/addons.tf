@@ -68,6 +68,22 @@ resource "helm_release" "cluster_autoscaler" {
   depends_on = [module.eks, module.irsa_cluster_autoscaler]
 }
 
+resource "helm_release" "external_secrets" {
+  count      = var.enable_external_secrets ? 1 : 0
+  name       = "external-secrets"
+  repository = "https://charts.external-secrets.io"
+  chart      = "external-secrets"
+  namespace  = "kube-system"
+  version    = var.external_secrets_chart_version
+
+  set {
+    name  = "serviceAccount.create"
+    value = "true"
+  }
+
+  depends_on = [module.eks]
+}
+
 resource "helm_release" "aws_load_balancer_controller" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
