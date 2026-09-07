@@ -1,8 +1,8 @@
 locals {
-  project_name    = var.project_name
-  resource_prefix = "${var.project_name}-${var.environment}"
-  cluster_name    = local.resource_prefix
-  selected_azs    = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
+  project_name                            = var.project_name
+  resource_prefix                         = "${var.project_name}-${var.environment}"
+  cluster_name                            = local.resource_prefix
+  selected_azs                            = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
   cluster_autoscaler_namespace            = "kube-system"
   cluster_autoscaler_service_account_name = "cluster-autoscaler"
   cluster_autoscaler_node_group_tags = {
