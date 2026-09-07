@@ -29,3 +29,7 @@ output "public_subnets" {
 output "private_subnets" {
   value = module.eks_infra.private_subnets
 }
+
+output "cluster_autoscaler" {
+  value = module.eks_infra.cluster_autoscaler
+}

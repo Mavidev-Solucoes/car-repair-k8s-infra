@@ -27,17 +27,22 @@ resource "helm_release" "cluster_autoscaler" {
   name       = "cluster-autoscaler"
   repository = "https://kubernetes.github.io/autoscaler"
   chart      = "cluster-autoscaler"
-  namespace  = "kube-system"
+  namespace  = local.cluster_autoscaler_namespace
   version    = var.cluster_autoscaler_chart_version
 
   set {
     name  = "autoDiscovery.clusterName"
-    value = module.eks.cluster_name
+    value = local.cluster_name
   }
 
   set {
     name  = "awsRegion"
     value = var.aws_region
+  }
+
+  set {
+    name  = "cloudProvider"
+    value = "aws"
   }
 
   set {
@@ -47,11 +52,26 @@ resource "helm_release" "cluster_autoscaler" {
 
   set {
     name  = "rbac.serviceAccount.name"
-    value = "cluster-autoscaler"
+    value = local.cluster_autoscaler_service_account_name
   }
 
   set {
     name  = "rbac.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.irsa_cluster_autoscaler.arn
+  }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "true"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = local.cluster_autoscaler_service_account_name
+  }
+
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = module.irsa_cluster_autoscaler.arn
   }
 
