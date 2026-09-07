@@ -1,24 +1,24 @@
-output "cluster_endpoint" {
-  description = "Amazon EKS cluster endpoint."
-  value       = module.eks.cluster_endpoint
+output "rds_endpoint" {
+  description = "PostgreSQL RDS endpoint."
+  value       = aws_db_instance.postgres.address
 }
 
-output "cluster_name" {
-  description = "Amazon EKS cluster name."
-  value       = module.eks.cluster_name
+output "rds_port" {
+  description = "PostgreSQL RDS port."
+  value       = aws_db_instance.postgres.port
 }
 
-output "oidc_provider_arn" {
-  description = "OIDC provider ARN used by IRSA."
-  value       = module.eks.oidc_provider_arn
+output "rds_arn" {
+  description = "PostgreSQL RDS ARN."
+  value       = aws_db_instance.postgres.arn
 }
 
-output "aws_load_balancer_controller_role_arn" {
-  description = "IRSA role ARN for the AWS Load Balancer Controller."
-  value       = module.irsa_aws_load_balancer_controller.arn
+output "secret_arn" {
+  description = "Secrets Manager ARN containing PostgreSQL credentials and connection data."
+  value       = aws_secretsmanager_secret.postgres.arn
 }
 
-output "cluster_autoscaler_role_arn" {
-  description = "IRSA role ARN for Cluster Autoscaler."
-  value       = module.irsa_cluster_autoscaler.arn
+output "security_group_id" {
+  description = "Security group ID attached to PostgreSQL RDS."
+  value       = aws_security_group.postgres.id
 }
