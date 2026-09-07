@@ -7,6 +7,11 @@ variable "project_name" {
 variable "environment" {
   description = "Deployment environment name."
   type        = string
+
+  validation {
+    condition     = contains(["dev", "prod"], var.environment)
+    error_message = "The environment must be either dev or prod."
+  }
 }
 
 variable "aws_region" {
@@ -98,6 +103,69 @@ variable "aws_load_balancer_controller_chart_version" {
   description = "AWS Load Balancer Controller chart version."
   type        = string
   default     = "1.13.4"
+}
+
+variable "db_name" {
+  description = "PostgreSQL database name."
+  type        = string
+  default     = "carrepair"
+}
+
+variable "db_username" {
+  description = "PostgreSQL application username."
+  type        = string
+  default     = "app_user"
+
+  validation {
+    condition     = var.db_username != "postgres"
+    error_message = "Use a non-administrative PostgreSQL username."
+  }
+}
+
+variable "db_engine_version" {
+  description = "PostgreSQL engine version for RDS."
+  type        = string
+  default     = "16.4"
+}
+
+variable "db_parameter_group_family" {
+  description = "PostgreSQL parameter group family."
+  type        = string
+  default     = "postgres16"
+}
+
+variable "instance_class" {
+  description = "RDS instance class."
+  type        = string
+  default     = "db.t4g.micro"
+
+  validation {
+    condition     = can(regex("^db\\.[a-z0-9]+\\.[a-z0-9]+$", var.instance_class))
+    error_message = "The instance_class must follow the RDS format, for example db.t4g.micro."
+  }
+}
+
+variable "allocated_storage" {
+  description = "Initial allocated RDS storage in GB."
+  type        = number
+  default     = 20
+
+  validation {
+    condition     = var.allocated_storage >= 20
+    error_message = "The allocated_storage must be at least 20 GB."
+  }
+}
+
+variable "max_allocated_storage" {
+  description = "Maximum allocated RDS storage in GB for autoscaling."
+  type        = number
+  default     = 100
+}
+
+variable "allowed_security_groups" {
+  description = "Security groups allowed to connect to PostgreSQL on port 5432."
+  type        = list(string)
+  default     = []
 }
 
 variable "additional_tags" {

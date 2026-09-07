@@ -2,7 +2,7 @@ module "irsa_cluster_autoscaler" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
 
-  name = "${local.name_prefix}-cluster-autoscaler"
+  name = "${local.resource_prefix}-cluster-autoscaler"
 
   attach_cluster_autoscaler_policy = true
   cluster_autoscaler_cluster_names = [module.eks.cluster_name]
@@ -21,7 +21,7 @@ module "irsa_aws_load_balancer_controller" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.0"
 
-  name = "${local.name_prefix}-aws-load-balancer-controller"
+  name = "${local.resource_prefix}-aws-load-balancer-controller"
 
   attach_load_balancer_controller_policy = true
 

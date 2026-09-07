@@ -1,11 +1,19 @@
-output "cluster_endpoint" {
-  value = module.eks_infra.cluster_endpoint
+output "rds_endpoint" {
+  value = module.eks_infra.rds_endpoint
 }
 
-output "cluster_name" {
-  value = module.eks_infra.cluster_name
+output "rds_port" {
+  value = module.eks_infra.rds_port
 }
 
-output "oidc_provider_arn" {
-  value = module.eks_infra.oidc_provider_arn
+output "rds_arn" {
+  value = module.eks_infra.rds_arn
+}
+
+output "secret_arn" {
+  value = module.eks_infra.secret_arn
+}
+
+output "security_group_id" {
+  value = module.eks_infra.security_group_id
 }
