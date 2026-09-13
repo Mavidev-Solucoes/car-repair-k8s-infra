@@ -38,6 +38,26 @@ output "private_subnets" {
   value       = module.vpc.private_subnets
 }
 
+output "node_security_group_id" {
+  description = "Security group ID used by the EKS worker nodes."
+  value       = module.eks.node_security_group_id
+}
+
+output "ecr_repository_url" {
+  description = "ECR repository URL for car-repair-app."
+  value       = aws_ecr_repository.car_repair_app.repository_url
+}
+
+output "external_secrets_role_arn" {
+  description = "IAM role ARN used by External Secrets Operator when enabled."
+  value       = var.enable_external_secrets ? aws_iam_role.external_secrets[0].arn : null
+}
+
+output "external_secrets_service_account_name" {
+  description = "Service account name used by External Secrets Operator when enabled."
+  value       = var.enable_external_secrets ? var.external_secrets_service_account_name : null
+}
+
 output "cluster_autoscaler" {
   description = "Cluster Autoscaler settings useful for troubleshooting."
   value = {

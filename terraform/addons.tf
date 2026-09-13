@@ -93,7 +93,7 @@ resource "helm_release" "external_secrets" {
   name       = "external-secrets"
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
-  namespace  = "kube-system"
+  namespace  = var.external_secrets_namespace
   version    = var.external_secrets_chart_version
 
   set {
@@ -101,7 +101,17 @@ resource "helm_release" "external_secrets" {
     value = "true"
   }
 
-  depends_on = [module.eks]
+  set {
+    name  = "serviceAccount.name"
+    value = var.external_secrets_service_account_name
+  }
+
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = aws_iam_role.external_secrets[0].arn
+  }
+
+  depends_on = [module.eks, aws_iam_role_policy_attachment.external_secrets]
 }
 
 resource "helm_release" "aws_load_balancer_controller" {

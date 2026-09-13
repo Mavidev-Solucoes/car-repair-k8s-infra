@@ -22,7 +22,7 @@ variable "aws_region" {
 variable "kubernetes_version" {
   description = "Amazon EKS Kubernetes version."
   type        = string
-  default     = "1.31"
+  default     = "1.35"
 }
 
 variable "vpc_cidr" {
@@ -71,9 +71,18 @@ variable "cluster_endpoint_private_access" {
 }
 
 variable "public_access_cidrs" {
-  description = "CIDR blocks allowed to access the public EKS API endpoint."
+  description = "Administrative CIDR blocks allowed to access the public EKS API endpoint."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition     = length(var.public_access_cidrs) > 0
+    error_message = "At least one administrative CIDR must be provided for public EKS API endpoint access."
+  }
+
+  validation {
+    condition     = var.environment != "prod" || !contains(var.public_access_cidrs, "0.0.0.0/0")
+    error_message = "Production must not use 0.0.0.0/0 for public EKS API endpoint access. Use a corporate/VPN CIDR or a runner inside the VPC."
+  }
 }
 
 variable "eks_managed_node_groups" {
@@ -115,6 +124,59 @@ variable "external_secrets_chart_version" {
   description = "External Secrets Operator chart version."
   type        = string
   default     = "0.14.4"
+}
+
+variable "external_secrets_namespace" {
+  description = "Namespace where External Secrets Operator is installed."
+  type        = string
+  default     = "kube-system"
+}
+
+variable "external_secrets_service_account_name" {
+  description = "Dedicated service account name used by External Secrets Operator."
+  type        = string
+  default     = "external-secrets"
+}
+
+variable "external_secrets_secret_arns" {
+  description = "Secrets Manager secret ARNs that External Secrets Operator can read. If empty, access is limited to project/environment-prefixed secrets."
+  type        = list(string)
+  default     = []
+}
+
+variable "external_secrets_kms_key_arns" {
+  description = "Optional KMS key ARNs External Secrets Operator can use to decrypt Secrets Manager secrets encrypted with customer-managed keys."
+  type        = list(string)
+  default     = []
+}
+
+variable "ecr_repository_name" {
+  description = "ECR repository name for the car-repair-app image. Defaults to a project/environment-scoped repository."
+  type        = string
+  default     = null
+}
+
+variable "ecr_image_tag_mutability" {
+  description = "ECR image tag mutability policy."
+  type        = string
+  default     = "IMMUTABLE"
+
+  validation {
+    condition     = contains(["MUTABLE", "IMMUTABLE"], var.ecr_image_tag_mutability)
+    error_message = "ECR image tag mutability must be either MUTABLE or IMMUTABLE."
+  }
+}
+
+variable "ecr_untagged_image_expire_days" {
+  description = "Number of days to keep untagged ECR images."
+  type        = number
+  default     = 14
+}
+
+variable "ecr_tagged_image_count" {
+  description = "Maximum number of tagged ECR images to retain."
+  type        = number
+  default     = 30
 }
 
 variable "additional_tags" {

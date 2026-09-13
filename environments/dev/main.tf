@@ -20,6 +20,9 @@ module "eks_infra" {
   ]
 
   single_nat_gateway = true
+  public_access_cidrs = [
+    "0.0.0.0/0"
+  ]
 
   eks_managed_node_groups = {
     system = {

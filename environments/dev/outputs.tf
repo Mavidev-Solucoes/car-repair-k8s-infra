@@ -30,6 +30,22 @@ output "private_subnets" {
   value = module.eks_infra.private_subnets
 }
 
+output "node_security_group_id" {
+  value = module.eks_infra.node_security_group_id
+}
+
+output "ecr_repository_url" {
+  value = module.eks_infra.ecr_repository_url
+}
+
+output "external_secrets_role_arn" {
+  value = module.eks_infra.external_secrets_role_arn
+}
+
+output "external_secrets_service_account_name" {
+  value = module.eks_infra.external_secrets_service_account_name
+}
+
 output "cluster_autoscaler" {
   value = module.eks_infra.cluster_autoscaler
 }

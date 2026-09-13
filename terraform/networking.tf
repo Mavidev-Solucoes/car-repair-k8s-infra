@@ -2,6 +2,7 @@ locals {
   project_name                            = var.project_name
   resource_prefix                         = "${var.project_name}-${var.environment}"
   cluster_name                            = local.resource_prefix
+  ecr_repository_name                     = coalesce(var.ecr_repository_name, "${local.resource_prefix}/car-repair-app")
   selected_azs                            = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 3)
   cluster_autoscaler_namespace            = "kube-system"
   cluster_autoscaler_service_account_name = "cluster-autoscaler"
