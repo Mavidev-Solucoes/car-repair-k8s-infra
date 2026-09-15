@@ -1,0 +1,19 @@
+# Primeiro deploy PROD - exemplo sem segredos.
+# Copie para terraform.tfvars apenas se quiser sobrescrever os defaults.
+# Nao coloque credenciais AWS, New Relic API keys, license keys ou secrets da aplicacao aqui.
+
+enable_external_secrets = true
+enable_kong             = true
+enable_newrelic         = true
+
+# Manter false no primeiro apply. Dashboards/alerts exigem conta New Relic,
+# NEW_RELIC_API_KEY e telemetria ja chegando.
+enable_newrelic_observability_resources = false
+
+kong_chart_version     = "0.24.0"
+newrelic_chart_version = "8.0.10"
+
+newrelic_app_name    = "car-repair-app-prod"
+business_environment = "Production"
+newrelic_region      = "US"
+newrelic_account_id  = null
