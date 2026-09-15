@@ -26,3 +26,4 @@ tfplan
 # Diagnósticos locais AWS Academy
 academy-capabilities.txt
 eks-role-policies.txt
+.terraform/

@@ -1,0 +1,55 @@
+name: CI - Terraform Kubernetes
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform Format and Validate
+    runs-on: ubuntu-latest
+
+    # O provider New Relic exige NEW_RELIC_API_KEY durante terraform validate.
+    # Este valor é apenas um placeholder de CI; validate não acessa a API.
+    env:
+      NEW_RELIC_API_KEY: ci-validation-placeholder-not-a-secret
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        shell: bash
+        run: |
+          while IFS= read -r dir; do
+            echo
+            echo "========================================"
+            echo "Validando: ${dir}"
+            echo "========================================"
+
+            terraform -chdir="${dir}" init \
+              -backend=false \
+              -input=false
+
+            terraform -chdir="${dir}" validate
+          done < <(
+            find . \
+              -name '*.tf' \
+              -not -path '*/.terraform/*' \
+              -exec dirname {} \; \
+              | sort -u
+          )
