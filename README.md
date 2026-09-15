@@ -32,7 +32,7 @@ Esta stack provisiona:
 Internet/API -----> |  |          VPC           |  |
                     |  |                        |  |
                     |  |  Public Subnets        |  |
-                    |  |    +--> ALBs          |  |
+                    |  |    +--> NLB do Kong   |  |
                     |  |                        |  |
                     |  |  Private Subnets       |  |
                     |  |    +--> EKS Cluster    |  |
@@ -58,7 +58,7 @@ Kubernetes Services
 car-repair-app
 ```
 
-Kong é o API Gateway escolhido para o Tech Challenge. O AWS Network Load Balancer fornece a exposição de rede na AWS, enquanto Kong executa routing e policies HTTP dentro do cluster. As aplicações, incluindo `car-repair-app`, permanecem expostas internamente por Services `ClusterIP`; rotas específicas, plugins e consumers serão definidos em uma etapa posterior.
+Kong é o API Gateway escolhido para o Tech Challenge. O AWS Network Load Balancer fornece a exposição de rede na AWS, enquanto Kong executa routing e policies HTTP dentro do cluster. As aplicações, incluindo `car-repair-app`, permanecem expostas internamente por Services `ClusterIP`; rotas específicas, plugins e consumers da API são definidos no repositório `car-repair-app`.
 
 ## Componentes provisionados
 
@@ -662,10 +662,11 @@ Configure `NEW_RELIC_ACCOUNT_ID`, `NEW_RELIC_API_KEY` e `NEW_RELIC_REGION` no am
 
 ## Backend remoto
 
-Os ambientes `dev` e `prod` usam backend remoto S3 com locks nativos por arquivo:
+Os ambientes `dev`, `hml` e `prod` usam backend remoto S3 com locks nativos por arquivo:
 
 - Bucket: `car-repair-k8s-infra-terraform-state`
 - Dev key: `dev/terraform.tfstate`
+- Hml key: `hml/terraform.tfstate`
 - Prod key: `prod/terraform.tfstate`
 - Academy base key: `academy-dev/base/terraform.tfstate`
 - Academy addons key: `academy-dev/addons/terraform.tfstate`
@@ -688,7 +689,7 @@ terraform -chdir=backend-bootstrap init
 terraform -chdir=backend-bootstrap apply
 ```
 
-Se o nome global do bucket já estiver em uso, ajuste `state_bucket_name` no bootstrap e o campo `bucket` em `environments/dev/backend.tf` e `environments/prod/backend.tf`.
+Se o nome global do bucket já estiver em uso, ajuste `state_bucket_name` no bootstrap e o campo `bucket` em `environments/dev/backend.tf`, `environments/hml/backend.tf` e `environments/prod/backend.tf`.
 
 ## Como executar Terraform
 
@@ -701,6 +702,12 @@ terraform -chdir=environments/dev init
 ou
 
 ```bash
+terraform -chdir=environments/hml init
+```
+
+ou
+
+```bash
 terraform -chdir=environments/prod init
 ```
 
@@ -708,6 +715,7 @@ terraform -chdir=environments/prod init
 
 ```bash
 terraform -chdir=environments/dev validate
+terraform -chdir=environments/hml validate
 terraform -chdir=environments/prod validate
 ```
 
@@ -717,10 +725,34 @@ terraform -chdir=environments/prod validate
 terraform -chdir=environments/dev plan
 ```
 
+ou
+
+```bash
+terraform -chdir=environments/hml plan
+```
+
+ou
+
+```bash
+terraform -chdir=environments/prod plan
+```
+
 ### 4) Aplicação
 
 ```bash
 terraform -chdir=environments/dev apply
+```
+
+ou
+
+```bash
+terraform -chdir=environments/hml apply
+```
+
+ou
+
+```bash
+terraform -chdir=environments/prod apply
 ```
 
 ## Ambientes
@@ -731,6 +763,13 @@ terraform -chdir=environments/dev apply
 - Node group de aplicações com instâncias Spot
 - Endpoint público do EKS com `public_access_cidrs = ["0.0.0.0/0"]` apenas para fins acadêmicos/desenvolvimento
 - Tag `Tier = development`
+
+### Hml
+
+- Configuracao intermediaria para homologacao
+- Backend remoto S3 em `hml/terraform.tfstate`
+- Add-ons operacionais habilitaveis pelas mesmas flags de `dev` e `prod`
+- Deve consumir secrets com prefixo `car-repair/hml/`
 
 ### Prod
 
@@ -841,9 +880,16 @@ Os nomes oficiais no AWS Secrets Manager são:
 - `car-repair/<environment>/smtp`
 - `car-repair/<environment>/newrelic`
 
-Onde `<environment>` é `dev` ou `prod`.
+Onde `<environment>` é `dev`, `hml` ou `prod`.
 
 Este repositório não cria os secrets `database`, `jwt`, `smtp` ou `newrelic`. Eles pertencem aos repositórios ou processos responsáveis por cada recurso. Esta stack apenas autoriza o External Secrets Operator a consumi-los via IRSA.
+
+## Ordem entre repositórios
+
+1. `car-repair-k8s-infra`: cria VPC, EKS, ECR, Kong, External Secrets Operator, New Relic, Metrics Server, Cluster Autoscaler e roles IRSA.
+2. `car-repair-db-infra`: cria RDS PostgreSQL, secret do banco e security groups de banco.
+3. `car-repair-auth-lambda`: cria Lambda de autenticacao e secret JWT.
+4. `car-repair-app`: publica imagem, roda migrations e aplica workload e rotas Kong.
 
 ## Cluster Autoscaler: funcionamento, auto-discovery e validação
 
