@@ -1,0 +1,197 @@
+===== IDENTITY =====
+{
+    "UserId": "AROAWUYYFWXYKAOMS4KCY:user5437535=vitor.rdsilva@outlook.com",
+    "Account": "456927852016",
+    "Arn": "arn:aws:sts::456927852016:assumed-role/voclabs/user5437535=vitor.rdsilva@outlook.com"
+}
+
+===== EKS CLUSTERS =====
+{
+    "clusters": []
+}
+
+===== ACADEMY ROLES =====
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                                               ListRoles                                                                               |
++-------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+|  c221562a5587885l16838747t1w456927-LabEksClusterRole-kRHnjxH6CaSF |  arn:aws:iam::456927852016:role/c221562a5587885l16838747t1w456927-LabEksClusterRole-kRHnjxH6CaSF  |
+|  c221562a5587885l16838747t1w456927852-LabEksNodeRole-N3KBx4pErhQZ |  arn:aws:iam::456927852016:role/c221562a5587885l16838747t1w456927852-LabEksNodeRole-N3KBx4pErhQZ  |
+|  LabRole                                                          |  arn:aws:iam::456927852016:role/LabRole                                                           |
+|  voclabs                                                          |  arn:aws:iam::456927852016:role/voclabs                                                           |
++-------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+
+===== VOCLABS ATTACHED POLICIES =====
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "Pvoclabs1",
+            "PolicyArn": "arn:aws:iam::456927852016:policy/Pvoclabs1"
+        },
+        {
+            "PolicyName": "Pvoclabs2",
+            "PolicyArn": "arn:aws:iam::456927852016:policy/Pvoclabs2"
+        }
+    ]
+}
+
+===== VOCLABS INLINE POLICIES =====
+{
+    "PolicyNames": []
+}
+
+===== Pvoclabs2 POLICY METADATA =====
+
+aws: [ERROR]: An error occurred (AccessDenied) when calling the GetPolicy operation: User: arn:aws:sts::456927852016:assumed-role/voclabs/user5437535=vitor.rdsilva@outlook.com is not authorized to perform: iam:GetPolicy on resource: policy arn:aws:iam::456927852016:policy/Pvoclabs2 with an explicit deny in an identity-based policy: arn:aws:iam::456927852016:policy/Pvoclabs2
+
+Additional error details:
+Type: Sender
+
+===== OIDC PROVIDERS =====
+{
+    "OpenIDConnectProviderList": []
+}
+
+===== LOCAL IAM POLICIES =====
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                                                   ListPolicies                                                                                    |
++---------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------+-----+
+|  c221562a5587885l16838747t1w456927852016-VocLabPolicy1-4yKzsHYnggyB |  arn:aws:iam::456927852016:policy/c221562a5587885l16838747t1w456927852016-VocLabPolicy1-4yKzsHYnggyB  |  v1 |
+|  c221562a5587885l16838747t1w456927852016-VocLabPolicy3-J6Edd6gDjr6h |  arn:aws:iam::456927852016:policy/c221562a5587885l16838747t1w456927852016-VocLabPolicy3-J6Edd6gDjr6h  |  v1 |
+|  Pvoclabs1                                                          |  arn:aws:iam::456927852016:policy/Pvoclabs1                                                           |  v1 |
+|  Pvoclabs2                                                          |  arn:aws:iam::456927852016:policy/Pvoclabs2                                                           |  v1 |
+|  c221562a5587885l16838747t1w456927852016-VocLabPolicy2-8BzhbFGrtVR4 |  arn:aws:iam::456927852016:policy/c221562a5587885l16838747t1w456927852016-VocLabPolicy2-8BzhbFGrtVR4  |  v1 |
++---------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------+-----+
+
+===== LAB EKS CLUSTER ROLE POLICIES =====
+Cluster role: c221562a5587885l16838747t1w456927-LabEksClusterRole-kRHnjxH6CaSF
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AmazonEKSClusterPolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+        },
+        {
+            "PolicyName": "AmazonEKSNetworkingPolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy"
+        },
+        {
+            "PolicyName": "AmazonEKSComputePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSComputePolicy"
+        },
+        {
+            "PolicyName": "AmazonEKSBlockStoragePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSBlockStoragePolicy"
+        },
+        {
+            "PolicyName": "AmazonEKSLoadBalancingPolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"
+        }
+    ]
+}
+
+===== LAB EKS NODE ROLE POLICIES =====
+Node role: c221562a5587885l16838747t1w456927852-LabEksNodeRole-N3KBx4pErhQZ
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AmazonEKS_CNI_Policy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+        },
+        {
+            "PolicyName": "AmazonEC2ContainerRegistryReadOnly",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        },
+        {
+            "PolicyName": "AmazonEKSWorkerNodePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        }
+    ]
+}
+
+===== LABROLE POLICIES =====
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "c221562a5587885l16838747t1w456927852016-VocLabPolicy3-J6Edd6gDjr6h",
+            "PolicyArn": "arn:aws:iam::456927852016:policy/c221562a5587885l16838747t1w456927852016-VocLabPolicy3-J6Edd6gDjr6h"
+        },
+        {
+            "PolicyName": "c221562a5587885l16838747t1w456927852016-VocLabPolicy1-4yKzsHYnggyB",
+            "PolicyArn": "arn:aws:iam::456927852016:policy/c221562a5587885l16838747t1w456927852016-VocLabPolicy1-4yKzsHYnggyB"
+        },
+        {
+            "PolicyName": "c221562a5587885l16838747t1w456927852016-VocLabPolicy2-8BzhbFGrtVR4",
+            "PolicyArn": "arn:aws:iam::456927852016:policy/c221562a5587885l16838747t1w456927852016-VocLabPolicy2-8BzhbFGrtVR4"
+        },
+        {
+            "PolicyName": "AmazonSSMManagedInstanceCore",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        },
+        {
+            "PolicyName": "AmazonEKSClusterPolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+        },
+        {
+            "PolicyName": "AmazonEC2ContainerRegistryReadOnly",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        },
+        {
+            "PolicyName": "AmazonEKSWorkerNodePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        }
+    ]
+}
+
+===== EKS 1.35 ADDONS =====
+--- vpc-cni ---
+------------------------
+| DescribeAddonVersions|
++----------------------+
+|  v1.23.1-eksbuild.1  |
+|  v1.23.0-eksbuild.1  |
+|  v1.22.4-eksbuild.3  |
++----------------------+
+--- coredns ---
+-------------------------
+| DescribeAddonVersions |
++-----------------------+
+|  v1.14.3-eksbuild.16  |
+|  v1.14.3-eksbuild.14  |
+|  v1.14.3-eksbuild.9   |
++-----------------------+
+--- kube-proxy ---
+-------------------------
+| DescribeAddonVersions |
++-----------------------+
+|  v1.35.3-eksbuild.25  |
+|  v1.35.3-eksbuild.21  |
+|  v1.35.3-eksbuild.19  |
++-----------------------+
+
+===== EC2 INSTANCE TYPE AVAILABILITY =====
+-------------------------------
+|DescribeInstanceTypeOfferings|
++-----------------------------+
+|  us-east-1f                 |
+|  us-east-1d                 |
+|  us-east-1a                 |
+|  us-east-1b                 |
+|  us-east-1c                 |
++-----------------------------+
+
+===== ELB SERVICE ACCESS =====
+{
+    "LoadBalancers": []
+}
+
+===== SECRETS MANAGER ACCESS =====
+-----------------------------
+|        ListSecrets        |
++---------------------------+
+|  car-repair/dev/newrelic  |
++---------------------------+
+
+===== ECR ACCESS =====
+{
+    "repositories": []
+}

@@ -1,0 +1,6 @@
+enable_newrelic_observability_resources = true
+environment                             = "prod"
+newrelic_account_id                     = 1234567
+newrelic_region                         = "US"
+newrelic_app_name                       = "car-repair-app-prod"
+business_environment                    = "Production"

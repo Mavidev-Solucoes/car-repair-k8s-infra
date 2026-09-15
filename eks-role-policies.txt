@@ -1,0 +1,92 @@
+===== LabEksClusterRole - attached policies =====
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AmazonEKSClusterPolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+        },
+        {
+            "PolicyName": "AmazonEKSNetworkingPolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy"
+        },
+        {
+            "PolicyName": "AmazonEKSComputePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSComputePolicy"
+        },
+        {
+            "PolicyName": "AmazonEKSBlockStoragePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSBlockStoragePolicy"
+        },
+        {
+            "PolicyName": "AmazonEKSLoadBalancingPolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"
+        }
+    ]
+}
+
+===== LabEksNodeRole - attached policies =====
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AmazonEKS_CNI_Policy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+        },
+        {
+            "PolicyName": "AmazonEC2ContainerRegistryReadOnly",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        },
+        {
+            "PolicyName": "AmazonEKSWorkerNodePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        }
+    ]
+}
+
+===== LabRole - attached policies =====
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "c221562a5587885l16838747t1w456927852016-VocLabPolicy3-J6Edd6gDjr6h",
+            "PolicyArn": "arn:aws:iam::456927852016:policy/c221562a5587885l16838747t1w456927852016-VocLabPolicy3-J6Edd6gDjr6h"
+        },
+        {
+            "PolicyName": "c221562a5587885l16838747t1w456927852016-VocLabPolicy1-4yKzsHYnggyB",
+            "PolicyArn": "arn:aws:iam::456927852016:policy/c221562a5587885l16838747t1w456927852016-VocLabPolicy1-4yKzsHYnggyB"
+        },
+        {
+            "PolicyName": "c221562a5587885l16838747t1w456927852016-VocLabPolicy2-8BzhbFGrtVR4",
+            "PolicyArn": "arn:aws:iam::456927852016:policy/c221562a5587885l16838747t1w456927852016-VocLabPolicy2-8BzhbFGrtVR4"
+        },
+        {
+            "PolicyName": "AmazonSSMManagedInstanceCore",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        },
+        {
+            "PolicyName": "AmazonEKSClusterPolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+        },
+        {
+            "PolicyName": "AmazonEC2ContainerRegistryReadOnly",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        },
+        {
+            "PolicyName": "AmazonEKSWorkerNodePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        }
+    ]
+}
+
+===== LabEksClusterRole - inline policies =====
+{
+    "PolicyNames": []
+}
+
+===== LabEksNodeRole - inline policies =====
+{
+    "PolicyNames": []
+}
+
+===== LabRole - inline policies =====
+{
+    "PolicyNames": []
+}
