@@ -62,6 +62,18 @@ output "newrelic_enabled" {
   value = module.eks_infra.newrelic_enabled
 }
 
+output "newrelic_dashboard_guid" {
+  value = module.eks_infra.newrelic_dashboard_guid
+}
+
+output "newrelic_dashboard_permalink" {
+  value = module.eks_infra.newrelic_dashboard_permalink
+}
+
+output "newrelic_alert_policy_id" {
+  value = module.eks_infra.newrelic_alert_policy_id
+}
+
 output "cluster_autoscaler" {
   value = module.eks_infra.cluster_autoscaler
 }

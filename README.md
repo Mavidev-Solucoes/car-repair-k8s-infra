@@ -236,6 +236,92 @@ kubectl logs -n newrelic -l app.kubernetes.io/name=newrelic-logging --tail=100
 kubectl logs -n newrelic -l app.kubernetes.io/name=nri-kube-events --tail=100
 ```
 
+### New Relic dashboards e alerts
+
+Dashboards e alertas sao opcionais e independentes da instalacao do agente:
+
+```hcl
+enable_newrelic_observability_resources = true
+newrelic_account_id                     = 1234567
+newrelic_region                         = "US" # US, EU ou JP
+```
+
+Autenticacao do provider:
+
+- `NEW_RELIC_LICENSE_KEY`: chave de ingestao de telemetria usada por agentes/APM/Kubernetes.
+- `NEW_RELIC_API_KEY`: User API Key usada pelo Terraform para administrar dashboards e alertas. Normalmente inicia com `NRAK`.
+
+Nao coloque `NEW_RELIC_API_KEY` em `tfvars`, state, YAML ou codigo. Exporte localmente ou configure no CI:
+
+```bash
+export NEW_RELIC_API_KEY="<new-relic-user-api-key>"
+```
+
+O provider oficial `newrelic/newrelic` fica fixado na versao `3.97.3`. O HCL informa `account_id` e `region`; a credencial administrativa vem do ambiente.
+
+Arquitetura dos sinais:
+
+```text
+APM
+ ├── latency
+ ├── throughput
+ ├── errors
+ └── availability
+
+Business Events
+ ├── service orders/day
+ └── average duration/status
+
+Kubernetes
+ ├── pods
+ ├── CPU/memory
+ └── restarts
+
+        ↓
+New Relic Dashboard
+        ↓
+Alert Policy
+```
+
+Dashboard criado:
+
+- `Car Repair Shop - <environment>`
+- Paginas:
+  - `API / APM`
+  - `Negocio`
+  - `Kubernetes`
+
+Eventos de negocio usados:
+
+- `CarRepairServiceOrderCreated`
+- `CarRepairServiceOrderStatusChanged`
+
+O filtro de ambiente nos eventos de negocio respeita os valores emitidos pela aplicacao:
+
+- `dev` -> `Environment = 'Development'`
+- `prod` -> `Environment = 'Production'`
+
+Alertas criados na policy `car-repair-shop-<environment>`:
+
+- API error rate: warning `> 2%`, critical `> 5%`, por 5 minutos.
+- API p95 latency: warning `> 1s`, critical `> 2s`, por 5 minutos.
+- Deployment availability: warning abaixo de 2 replicas disponiveis, critical abaixo de 1 replica disponivel, por 5 minutos.
+- Container restarts: warning `> 1`, critical `> 3` restarts no periodo avaliado, por 5 minutos.
+
+Thresholds podem ser alterados por variaveis `newrelic_*_threshold`.
+
+Estrategia de loss-of-signal:
+
+- Alertas de APM nao usam loss-of-signal para evitar falso positivo em periodos sem trafego, especialmente em `dev`.
+- Alertas Kubernetes de disponibilidade e restarts usam loss-of-signal apenas em `prod`, porque a ausencia de amostras do workload/integracao pode indicar problema operacional real.
+- `dev` nao abre incidente apenas por ausencia de trafego ou amostras.
+
+Notificacoes:
+
+- Esta stack cria apenas alert policy e conditions.
+- Nao cria Slack, webhook, email falso ou recursos legados/deprecated de alert channel.
+- Notification destination/workflow deve ser conectado posteriormente quando houver destino real.
+
 ## Pré-requisitos
 
 - Terraform `1.12+`

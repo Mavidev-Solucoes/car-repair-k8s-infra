@@ -27,3 +27,27 @@ variable "newrelic_chart_version" {
   type        = string
   default     = "8.0.10"
 }
+
+variable "enable_newrelic_observability_resources" {
+  description = "Whether to create New Relic dashboards and alerts in prod."
+  type        = bool
+  default     = false
+}
+
+variable "newrelic_account_id" {
+  description = "New Relic account ID for prod dashboards and alerts."
+  type        = number
+  default     = null
+}
+
+variable "newrelic_region" {
+  description = "New Relic account region for prod."
+  type        = string
+  default     = "US"
+}
+
+variable "newrelic_app_name" {
+  description = "New Relic APM app name for prod."
+  type        = string
+  default     = "car-repair-app-prod"
+}
