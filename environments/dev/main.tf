@@ -1,25 +1,18 @@
 module "eks_infra" {
   source = "../../terraform"
 
-  project_name = "car-repair"
+  project_name = var.project_name
   environment  = "dev"
-  aws_region   = "us-east-1"
+  aws_region   = var.aws_region
 
-  vpc_cidr = "10.10.0.0/16"
+  kubernetes_version = var.kubernetes_version
 
-  public_subnet_cidrs = [
-    "10.10.0.0/24",
-    "10.10.1.0/24",
-    "10.10.2.0/24"
-  ]
+  vpc_cidr = var.vpc_cidr
 
-  private_subnet_cidrs = [
-    "10.10.10.0/24",
-    "10.10.11.0/24",
-    "10.10.12.0/24"
-  ]
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
 
-  single_nat_gateway = true
+  single_nat_gateway = var.single_nat_gateway
 
   enable_external_secrets                 = var.enable_external_secrets
   enable_kong                             = var.enable_kong
@@ -30,42 +23,11 @@ module "eks_infra" {
   newrelic_account_id                     = var.newrelic_account_id
   newrelic_region                         = var.newrelic_region
   newrelic_app_name                       = var.newrelic_app_name
+  business_environment                    = var.business_environment
 
-  public_access_cidrs = [
-    "0.0.0.0/0"
-  ]
+  public_access_cidrs = var.public_access_cidrs
 
-  eks_managed_node_groups = {
-    system = {
-      ami_type       = "AL2023_x86_64_STANDARD"
-      instance_types = ["t3.medium"]
-      min_size       = 1
-      max_size       = 3
-      desired_size   = 2
-      capacity_type  = "ON_DEMAND"
-      labels = {
-        role = "system"
-      }
-    }
-    applications = {
-      ami_type       = "AL2023_x86_64_STANDARD"
-      instance_types = ["t3.large"]
-      min_size       = 1
-      max_size       = 4
-      desired_size   = 2
-      capacity_type  = "SPOT"
-      labels = {
-        role = "applications"
-      }
-      taints = {
-        workloads = {
-          key    = "workload"
-          value  = "dotnet"
-          effect = "NO_SCHEDULE"
-        }
-      }
-    }
-  }
+  eks_managed_node_groups = var.eks_managed_node_groups
 
   additional_tags = {
     CostCenter = "devops"

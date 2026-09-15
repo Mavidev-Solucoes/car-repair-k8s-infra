@@ -20,11 +20,6 @@ provider "helm" {
   }
 }
 
-provider "newrelic" {
-  account_id = var.newrelic_account_id
-  region     = var.newrelic_region
-}
-
 data "aws_availability_zones" "available" {
   state = "available"
 }

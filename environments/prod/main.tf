@@ -30,6 +30,7 @@ module "eks_infra" {
   newrelic_account_id                     = var.newrelic_account_id
   newrelic_region                         = var.newrelic_region
   newrelic_app_name                       = var.newrelic_app_name
+  business_environment                    = var.business_environment
 
   public_access_cidrs = [
     "10.0.0.0/8"

@@ -1,7 +1,7 @@
 locals {
   newrelic_observability_enabled = var.enable_newrelic_observability_resources
   newrelic_app_name              = coalesce(var.newrelic_app_name, "car-repair-app-${var.environment}")
-  newrelic_business_environment  = coalesce(var.newrelic_business_event_environment, var.environment == "prod" ? "Production" : "Development")
+  newrelic_business_environment  = coalesce(var.business_environment, var.environment == "prod" ? "Production" : "Development")
   car_repair_app_namespace       = "car-repair-app"
   car_repair_app_deployment      = "car-repair-app"
   kong_troubleshooting_namespace = var.kong_namespace
@@ -14,16 +14,17 @@ locals {
   newrelic_duration_by_status_query    = "FROM CarRepairServiceOrderStatusChanged SELECT average(DurationSeconds) / 60 WHERE Environment = '${local.newrelic_business_environment}' FACET PreviousStatus"
   newrelic_transitions_by_status_query = "FROM CarRepairServiceOrderStatusChanged SELECT count(*) WHERE Environment = '${local.newrelic_business_environment}' FACET NewStatus"
   newrelic_pods_query                  = "FROM K8sPodSample SELECT uniqueCount(podName) WHERE namespaceName = '${local.car_repair_app_namespace}' AND deploymentName = '${local.car_repair_app_deployment}' FACET status TIMESERIES"
-  newrelic_container_restarts_query    = "FROM K8sContainerSample SELECT sum(restartCountDelta) WHERE namespaceName = '${local.car_repair_app_namespace}' AND deploymentName = '${local.car_repair_app_deployment}' TIMESERIES"
+  newrelic_container_restarts_query    = "FROM K8sContainerSample SELECT max(restartCount) - min(restartCount) WHERE namespaceName = '${local.car_repair_app_namespace}' AND deploymentName = '${local.car_repair_app_deployment}' TIMESERIES"
   newrelic_cpu_query                   = "FROM K8sContainerSample SELECT sum(cpuUsedCores) WHERE namespaceName = '${local.car_repair_app_namespace}' AND deploymentName = '${local.car_repair_app_deployment}' TIMESERIES"
   newrelic_memory_query                = "FROM K8sContainerSample SELECT sum(memoryUsedBytes) / 1024 / 1024 WHERE namespaceName = '${local.car_repair_app_namespace}' AND deploymentName = '${local.car_repair_app_deployment}' TIMESERIES"
   newrelic_deployment_health_query     = "FROM K8sDeploymentSample SELECT latest(podsDesired), latest(podsAvailable), latest(podsUnavailable) WHERE namespaceName = '${local.car_repair_app_namespace}' AND deploymentName = '${local.car_repair_app_deployment}' TIMESERIES"
+  newrelic_hpa_query                   = "FROM K8sHpaSample SELECT latest(currentReplicas), latest(desiredReplicas), latest(minReplicas), latest(maxReplicas) WHERE namespaceName = '${local.car_repair_app_namespace}' TIMESERIES"
   newrelic_kong_pods_query             = "FROM K8sPodSample SELECT uniqueCount(podName) WHERE namespaceName = '${local.kong_troubleshooting_namespace}' FACET status TIMESERIES"
 
   newrelic_alert_error_rate_query    = "SELECT percentage(count(*), WHERE error IS true) FROM Transaction WHERE appName = '${local.newrelic_app_name}'"
   newrelic_alert_latency_p95_query   = "SELECT percentile(duration, 95) FROM Transaction WHERE appName = '${local.newrelic_app_name}'"
   newrelic_alert_availability_query  = "SELECT latest(podsAvailable) FROM K8sDeploymentSample WHERE namespaceName = '${local.car_repair_app_namespace}' AND deploymentName = '${local.car_repair_app_deployment}'"
-  newrelic_alert_restarts_query      = "SELECT sum(restartCountDelta) FROM K8sContainerSample WHERE namespaceName = '${local.car_repair_app_namespace}' AND deploymentName = '${local.car_repair_app_deployment}'"
+  newrelic_alert_restarts_query      = "SELECT max(restartCount) - min(restartCount) FROM K8sContainerSample WHERE namespaceName = '${local.car_repair_app_namespace}' AND deploymentName = '${local.car_repair_app_deployment}'"
   newrelic_kubernetes_loss_of_signal = var.environment == "prod"
 }
 
@@ -206,9 +207,22 @@ resource "newrelic_one_dashboard" "car_repair_shop" {
     }
 
     widget_line {
-      title  = "Kong pods"
+      title  = "HPA replicas"
       row    = 7
       column = 7
+      width  = 6
+      height = 3
+
+      nrql_query {
+        account_id = var.newrelic_account_id
+        query      = local.newrelic_hpa_query
+      }
+    }
+
+    widget_line {
+      title  = "Kong pods"
+      row    = 10
+      column = 1
       width  = 6
       height = 3
 

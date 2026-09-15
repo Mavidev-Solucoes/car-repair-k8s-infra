@@ -154,7 +154,7 @@ variable "newrelic_app_name" {
   default     = null
 }
 
-variable "newrelic_business_event_environment" {
+variable "business_environment" {
   description = "Environment attribute emitted by car-repair-app custom business events. Defaults to Development for dev and Production for prod."
   type        = string
   default     = null

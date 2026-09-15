@@ -1,3 +1,87 @@
+variable "project_name" {
+  description = "Project identifier used in AWS resource names for dev."
+  type        = string
+  default     = "car-repair"
+}
+
+variable "aws_region" {
+  description = "AWS region used to deploy the dev EKS platform."
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "kubernetes_version" {
+  description = "Amazon EKS Kubernetes version for dev."
+  type        = string
+  default     = "1.35"
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for the dev VPC."
+  type        = string
+  default     = "10.10.0.0/16"
+}
+
+variable "public_subnet_cidrs" {
+  description = "CIDR blocks for dev public subnets."
+  type        = list(string)
+  default     = ["10.10.0.0/24", "10.10.1.0/24", "10.10.2.0/24"]
+}
+
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for dev private subnets."
+  type        = list(string)
+  default     = ["10.10.10.0/24", "10.10.11.0/24", "10.10.12.0/24"]
+}
+
+variable "public_access_cidrs" {
+  description = "Administrative CIDR blocks allowed to access the public EKS API endpoint in dev."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "single_nat_gateway" {
+  description = "Whether dev should use a single shared NAT gateway."
+  type        = bool
+  default     = true
+}
+
+variable "eks_managed_node_groups" {
+  description = "Managed node group definitions for dev."
+  type        = any
+  default = {
+    system = {
+      ami_type       = "AL2023_x86_64_STANDARD"
+      instance_types = ["t3.medium"]
+      min_size       = 1
+      max_size       = 3
+      desired_size   = 2
+      capacity_type  = "ON_DEMAND"
+      labels = {
+        role = "system"
+      }
+    }
+    applications = {
+      ami_type       = "AL2023_x86_64_STANDARD"
+      instance_types = ["t3.large"]
+      min_size       = 1
+      max_size       = 4
+      desired_size   = 2
+      capacity_type  = "SPOT"
+      labels = {
+        role = "applications"
+      }
+      taints = {
+        workloads = {
+          key    = "workload"
+          value  = "dotnet"
+          effect = "NO_SCHEDULE"
+        }
+      }
+    }
+  }
+}
+
 variable "enable_external_secrets" {
   description = "Whether to install External Secrets Operator in dev."
   type        = bool
@@ -50,4 +134,10 @@ variable "newrelic_app_name" {
   description = "New Relic APM app name for dev."
   type        = string
   default     = "car-repair-app-dev"
+}
+
+variable "business_environment" {
+  description = "Environment attribute emitted by car-repair-app custom business events in dev."
+  type        = string
+  default     = "Development"
 }

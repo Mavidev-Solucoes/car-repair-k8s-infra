@@ -249,38 +249,39 @@ newrelic_region                         = "US" # US, EU ou JP
 Autenticacao do provider:
 
 - `NEW_RELIC_LICENSE_KEY`: chave de ingestao de telemetria usada por agentes/APM/Kubernetes.
-- `NEW_RELIC_API_KEY`: User API Key usada pelo Terraform para administrar dashboards e alertas. Normalmente inicia com `NRAK`.
+- `NEW_RELIC_API_KEY`: User API Key usada pelo Terraform para administrar dashboards e alertas.
 
-Nao coloque `NEW_RELIC_API_KEY` em `tfvars`, state, YAML ou codigo. Exporte localmente ou configure no CI:
+Nao coloque `NEW_RELIC_API_KEY` em `tfvars`, state, YAML, codigo, README ou outputs. Configure essa variavel no ambiente local ou no CI.
 
-```bash
-export NEW_RELIC_API_KEY="<new-relic-user-api-key>"
-```
-
-O provider oficial `newrelic/newrelic` fica fixado na versao `3.97.3`. O HCL informa `account_id` e `region`; a credencial administrativa vem do ambiente.
+O provider oficial `newrelic/newrelic` fica fixado na versao `3.97.3`. Os recursos recebem `newrelic_account_id`; a credencial administrativa vem do ambiente. Ao habilitar dashboards/alerts, configure a regiao do provider pelo ambiente conforme a conta usada e mantenha `newrelic_region` alinhado para documentar o ambiente.
 
 Arquitetura dos sinais:
 
 ```text
 APM
- ├── latency
+ ├── latency p95
  ├── throughput
- ├── errors
+ ├── error rate
  └── availability
 
-Business Events
+Business events
  ├── service orders/day
- └── average duration/status
+ ├── average duration/status
+ └── status transitions
 
 Kubernetes
  ├── pods
- ├── CPU/memory
+ ├── CPU
+ ├── memory
+ ├── deployment health
  └── restarts
 
         ↓
 New Relic Dashboard
         ↓
 Alert Policy
+        ↓
+NRQL Alert Conditions
 ```
 
 Dashboard criado:
@@ -306,7 +307,7 @@ Alertas criados na policy `car-repair-shop-<environment>`:
 - API error rate: warning `> 2%`, critical `> 5%`, por 5 minutos.
 - API p95 latency: warning `> 1s`, critical `> 2s`, por 5 minutos.
 - Deployment availability: warning abaixo de 2 replicas disponiveis, critical abaixo de 1 replica disponivel, por 5 minutos.
-- Container restarts: warning `> 1`, critical `> 3` restarts no periodo avaliado, por 5 minutos.
+- Container restarts: warning `> 1`, critical `> 3` de diferenca no counter `restartCount` dentro da janela avaliada, por 5 minutos.
 
 Thresholds podem ser alterados por variaveis `newrelic_*_threshold`.
 
@@ -321,6 +322,147 @@ Notificacoes:
 - Esta stack cria apenas alert policy e conditions.
 - Nao cria Slack, webhook, email falso ou recursos legados/deprecated de alert channel.
 - Notification destination/workflow deve ser conectado posteriormente quando houver destino real.
+
+## Primeiro deploy DEV
+
+Esta sequencia prepara o primeiro deploy real em AWS sem versionar credenciais e sem criar dashboards/alerts New Relic antes de haver telemetria.
+
+### Pre-requisitos manuais
+
+1. Autenticar na AWS com uma identidade autorizada a criar VPC, EKS, IAM, ECR, ELB, Secrets Manager e S3 backend.
+2. Confirmar que o backend remoto existe:
+   - bucket: `car-repair-k8s-infra-terraform-state`
+   - key DEV: `dev/terraform.tfstate`
+   - region: `us-east-1`
+   - `encrypt = true`
+   - `use_lockfile = true`
+3. Confirmar ou criar no AWS Secrets Manager o secret usado pelo New Relic Kubernetes integration:
+   - nome: `car-repair/dev/newrelic`
+   - conteudo esperado: propriedade `licenseKey`
+4. Nao colocar license key, AWS credentials, `NEW_RELIC_API_KEY` ou secrets da aplicacao em `terraform.tfvars`.
+
+Se ja existir state local e ele precisar ser migrado para o backend S3, use:
+
+```bash
+terraform -chdir=environments/dev init -migrate-state
+```
+
+Se o state remoto ainda estiver vazio e nao existir state local para migrar, use init normal:
+
+```bash
+terraform -chdir=environments/dev init
+```
+
+### Configuracao DEV recomendada
+
+Use `environments/dev/terraform.tfvars.example` como referencia sem segredos. Para o primeiro deploy completo de infraestrutura, as flags operacionais devem ficar:
+
+```hcl
+enable_external_secrets = true
+enable_kong             = true
+enable_newrelic         = true
+```
+
+Para o primeiro apply, mantenha:
+
+```hcl
+enable_newrelic_observability_resources = false
+```
+
+Dashboards e alertas New Relic devem ser habilitados depois, quando houver conta New Relic confirmada, `NEW_RELIC_API_KEY` configurada no ambiente e telemetria chegando.
+
+### Ordem recomendada de apply
+
+Para reduzir risco no primeiro deploy, use duas fases. A license key do New Relic nao deve ser criada pelo Terraform nesta stack.
+
+FASE A - infraestrutura base e External Secrets Operator:
+
+```hcl
+enable_external_secrets                 = true
+enable_kong                             = true
+enable_newrelic                         = false
+enable_newrelic_observability_resources = false
+```
+
+Comandos:
+
+```bash
+terraform -chdir=environments/dev init
+terraform -chdir=environments/dev plan
+terraform -chdir=environments/dev apply
+```
+
+Validacoes apos a FASE A:
+
+```bash
+aws eks update-kubeconfig --region us-east-1 --name car-repair-dev
+kubectl get nodes
+kubectl get pods -A
+kubectl get pods -n kong
+kubectl get svc -n kong
+kubectl get externalsecret -A
+```
+
+FASE B - habilitar New Relic Kubernetes integration:
+
+1. Confirmar que `car-repair/dev/newrelic` existe no AWS Secrets Manager com a propriedade `licenseKey`.
+2. Alterar `enable_newrelic = true`.
+3. Rodar `terraform plan` e revisar.
+4. Rodar `terraform apply`.
+
+Validacoes apos a FASE B:
+
+```bash
+kubectl get pods -n newrelic
+kubectl get externalsecret -A
+kubectl get secret -n newrelic
+```
+
+Essa separacao evita a race:
+
+```text
+ExternalSecret criado
+  ↓
+Secret Kubernetes ainda nao reconciliado
+  ↓
+Helm release do New Relic tenta usar o Secret
+  ↓
+instalacao pode falhar
+```
+
+Nao use sleeps arbitrarios para resolver essa ordem. Aguarde o External Secrets Operator reconciliar o Secret ou separe os applies.
+
+### Kong no primeiro deploy
+
+Kong depende do cluster EKS, namespace `kong`, `IngressClass` `kong` e AWS Load Balancer Controller. Nenhuma rota de aplicacao precisa existir nesta etapa.
+
+O chart configura:
+
+- namespace `kong`
+- `IngressClass` `kong`
+- proxy como Service `LoadBalancer` com AWS NLB internet-facing
+- Admin API como `ClusterIP`, sem ingress publico
+- Kong Manager, Portal e Portal API desabilitados
+
+Verificacao:
+
+```bash
+kubectl get pods -n kong
+kubectl get svc -n kong
+kubectl get ingressclass
+```
+
+### Observabilidade via Terraform depois da infraestrutura
+
+Depois que a infraestrutura estiver funcional e a telemetria estiver chegando no New Relic, habilite os recursos de dashboard/alerts:
+
+```hcl
+enable_newrelic_observability_resources = true
+newrelic_account_id                     = <account-id>
+newrelic_region                         = "US"
+```
+
+Configure `NEW_RELIC_API_KEY` no ambiente local ou no CI. Quando a conta nao for US, configure tambem a regiao suportada pelo provider no ambiente, alinhada ao valor de `newrelic_region`.
 
 ## Pré-requisitos
 
