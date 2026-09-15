@@ -916,3 +916,12 @@ Este repositório expõe apenas artefatos necessários para a plataforma Kuberne
 - `Environment = <env>`
 - `ManagedBy = Terraform`
 - `Owner = FIAP-TechChallenge`
+
+## Relacionamento com os demais repositórios
+
+| Repositório | Responsabilidade |
+|------------|------------------|
+| car-repair-app | API principal |
+| car-repair-auth-lambda | Emissão de JWT |
+| car-repair-db-infra | Banco PostgreSQL |
+| car-repair-k8s-infra | Plataforma Kubernetes |
