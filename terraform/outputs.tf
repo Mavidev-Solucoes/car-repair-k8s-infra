@@ -58,6 +58,26 @@ output "external_secrets_service_account_name" {
   value       = var.enable_external_secrets ? var.external_secrets_service_account_name : null
 }
 
+output "kong_namespace" {
+  description = "Namespace where Kong Gateway and Kong Ingress Controller are installed when enabled."
+  value       = var.enable_kong ? var.kong_namespace : null
+}
+
+output "kong_ingress_class" {
+  description = "IngressClass watched by Kong Ingress Controller when enabled."
+  value       = var.enable_kong ? var.kong_ingress_class : null
+}
+
+output "newrelic_namespace" {
+  description = "Namespace where New Relic Kubernetes integration is installed when enabled."
+  value       = var.enable_newrelic ? local.newrelic_namespace : null
+}
+
+output "newrelic_enabled" {
+  description = "Whether New Relic Kubernetes integration is enabled."
+  value       = var.enable_newrelic
+}
+
 output "cluster_autoscaler" {
   description = "Cluster Autoscaler settings useful for troubleshooting."
   value = {

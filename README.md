@@ -19,7 +19,8 @@ Esta stack provisiona:
 - Cluster Autoscaler com auto-discovery por tags dos managed node groups
 - AWS Load Balancer Controller (ALB Controller)
 - External Secrets Operator opcional
-- Preparação para adoção futura de Kong e New Relic
+- Kong Gateway + Kong Ingress Controller opcional
+- New Relic Kubernetes Integration opcional
 
 ## Arquitetura
 
@@ -42,6 +43,22 @@ Internet/API -----> |  |          VPC           |  |
                     |            +--> Helm Add-ons
                     +------------------------------+
 ```
+
+Com Kong habilitado, a exposição HTTP da aplicação segue este desenho:
+
+```text
+Internet
+   |
+AWS NLB
+   |
+Kong Gateway
+   |
+Kubernetes Services
+   |
+car-repair-app
+```
+
+Kong é o API Gateway escolhido para o Tech Challenge. O AWS Network Load Balancer fornece a exposição de rede na AWS, enquanto Kong executa routing e policies HTTP dentro do cluster. As aplicações, incluindo `car-repair-app`, permanecem expostas internamente por Services `ClusterIP`; rotas específicas, plugins e consumers serão definidos em uma etapa posterior.
 
 ## Componentes provisionados
 
@@ -94,11 +111,130 @@ Validação arquitetural aplicada:
 - Por padrão, a role lê apenas secrets com prefixo `car-repair/<environment>/`; use `external_secrets_secret_arns` somente como override explícito
 - Não armazena `AWS_ACCESS_KEY_ID` ou `AWS_SECRET_ACCESS_KEY` em Secrets Kubernetes
 
-### Kong e New Relic
+### Kong Gateway
 
-- Namespaces `kong` e `newrelic` são criados por padrão
-- O cluster fica preparado para instalação futura desses componentes sem ajuste estrutural no bootstrap base
-- Kong, New Relic e workloads da aplicação não são instalados por esta revisão
+- Instalação opcional controlada por `enable_kong`
+- Implantado via Helm chart oficial `kong/ingress`
+- Chart fixado por `kong_chart_version`, sem uso de `latest`
+- Kong Gateway executa em DB-less mode com `KONG_DATABASE=off`
+- Kong Ingress Controller é instalado junto com o Gateway
+- `IngressClass` explícita `kong`, com controller `ingress-controllers.konghq.com/kong`
+- O controller usa a classe `kong` e não assume outras `IngressClasses`
+- Somente o proxy do Kong é exposto externamente
+- O proxy usa Service `LoadBalancer` com AWS NLB internet-facing gerenciado pelo AWS Load Balancer Controller
+- Admin API permanece interna ao cluster via `ClusterIP`
+- Kong Manager, Admin GUI, Portal e Portal API permanecem desabilitados
+- Não há PostgreSQL, RDS ou StatefulSet de banco para Kong
+- Não há credenciais AWS ou chaves JWT injetadas nos pods do Kong
+- HPA do Gateway habilitado com 2 a 5 réplicas e alvo de CPU em 70%
+- Requests/limits iniciais do Gateway e do controller: `100m/128Mi` e `500m/512Mi`
+
+Versões padrão:
+
+- Kong ingress Helm chart: `0.24.0`
+- Kong Gateway image: `kong:3.9`
+- Kong Ingress Controller image: `kong/kubernetes-ingress-controller:3.5`
+
+Para habilitar:
+
+```hcl
+enable_kong = true
+```
+
+Após o deploy, consulte os recursos básicos com:
+
+```bash
+kubectl get pods -n kong
+kubectl get svc -n kong
+kubectl get ingressclass
+```
+
+Para obter o hostname/endereço provisionado pelo Load Balancer, use:
+
+```bash
+kubectl get svc -n kong
+```
+
+O Terraform não tenta ler o hostname do Load Balancer porque esse valor é assíncrono e pode criar dependência instável com o estado Kubernetes.
+
+### New Relic
+
+- Instalação opcional controlada por `enable_newrelic`
+- Implantado via Helm chart oficial `newrelic/nri-bundle`
+- Chart fixado por `newrelic_chart_version`, sem uso de `latest`
+- Namespace `newrelic` é criado por padrão
+- Coleta métricas de Kubernetes, nodes, pods, deployments, HPA e capacidade do cluster
+- Coleta Kubernetes Events, incluindo `FailedScheduling`, `OOMKilled`, `CrashLoopBackOff`, `FailedMount` e eventos de scaling
+- Coleta logs de containers via DaemonSet do bundle, sem sidecars por aplicação
+- Observa Kong e `car-repair-app` como workloads Kubernetes, incluindo pods e logs dos namespaces `kong` e `car-repair-app`
+- Não configura plugin New Relic específico no Kong
+- Não altera código .NET, Dockerfile, RDS ou Lambda Auth
+
+Arquitetura de observabilidade:
+
+```text
+EKS
+ |
+ +-- Nodes
+ +-- Pods
+ +-- Kong
+ +-- car-repair-app
+ |
+ v
+New Relic Kubernetes Integration
+ |
+ +-- Metrics
+ +-- Logs
+ +-- Events
+```
+
+Versão padrão:
+
+- New Relic nri-bundle Helm chart: `8.0.10`
+
+Para habilitar:
+
+```hcl
+enable_external_secrets = true
+enable_newrelic        = true
+```
+
+Pré-requisito no AWS Secrets Manager:
+
+```text
+car-repair/<environment>/newrelic
+```
+
+Conteúdo esperado:
+
+```json
+{
+  "licenseKey": "..."
+}
+```
+
+A license key não é colocada em variáveis Terraform, `tfvars`, código, YAML ou outputs. O Terraform cria um `SecretStore` e um `ExternalSecret` no namespace `newrelic`; o External Secrets Operator sincroniza o secret do AWS Secrets Manager para o Kubernetes Secret `newrelic-license`. O Helm release referencia esse secret com `global.customSecretName` e `global.customSecretLicenseKey`, evitando escrever a license key no Terraform state.
+
+Tags/atributos enviados quando suportado:
+
+- `environment = dev/prod`
+- `project = car-repair-shop`
+- `managedBy = terraform`
+
+Após o deploy, valide:
+
+```bash
+kubectl get pods -n newrelic
+kubectl get externalsecret -n newrelic
+kubectl get secret -n newrelic
+```
+
+Também é útil conferir se eventos e logs estão fluindo:
+
+```bash
+kubectl logs -n newrelic -l app.kubernetes.io/name=newrelic-logging --tail=100
+kubectl logs -n newrelic -l app.kubernetes.io/name=nri-kube-events --tail=100
+```
 
 ## Pré-requisitos
 
@@ -197,6 +333,14 @@ terraform -chdir=environments/dev apply
 - `private_subnet_cidrs`
 - `eks_managed_node_groups`
 - `application_namespaces`
+- `enable_kong`
+- `kong_chart_version`
+- `kong_namespace`
+- `kong_ingress_class`
+- `kong_gateway_image_tag`
+- `kong_ingress_controller_image_tag`
+- `enable_newrelic`
+- `newrelic_chart_version`
 - `enable_external_secrets`
 - `external_secrets_namespace`
 - `external_secrets_service_account_name`
@@ -225,6 +369,10 @@ terraform -chdir=environments/dev apply
 - `ecr_repository_url`
 - `external_secrets_role_arn`
 - `external_secrets_service_account_name`
+- `kong_namespace`
+- `kong_ingress_class`
+- `newrelic_namespace`
+- `newrelic_enabled`
 - `cluster_autoscaler`
 
 Os demais repositórios devem consumir principalmente:
@@ -234,6 +382,8 @@ Os demais repositórios devem consumir principalmente:
 - `oidc_provider_arn` e `oidc_provider_url` para novas roles IRSA
 - `ecr_repository_url` para build/push da imagem `car-repair-app`
 - `external_secrets_role_arn` e `external_secrets_service_account_name` para auditoria da integração do External Secrets Operator
+- `kong_namespace` e `kong_ingress_class` para configurar manifests de Ingress futuros
+- `newrelic_namespace` e `newrelic_enabled` para auditoria da integração New Relic
 
 ## External Secrets + IRSA
 
@@ -270,10 +420,11 @@ Os nomes oficiais no AWS Secrets Manager são:
 - `car-repair/<environment>/database`
 - `car-repair/<environment>/jwt`
 - `car-repair/<environment>/smtp`
+- `car-repair/<environment>/newrelic`
 
 Onde `<environment>` é `dev` ou `prod`.
 
-Este repositório não cria os secrets `database`, `jwt` ou `smtp`. Eles pertencem aos repositórios responsáveis por cada recurso. Esta stack apenas autoriza o External Secrets Operator a consumi-los via IRSA.
+Este repositório não cria os secrets `database`, `jwt`, `smtp` ou `newrelic`. Eles pertencem aos repositórios ou processos responsáveis por cada recurso. Esta stack apenas autoriza o External Secrets Operator a consumi-los via IRSA.
 
 ## Cluster Autoscaler: funcionamento, auto-discovery e validação
 

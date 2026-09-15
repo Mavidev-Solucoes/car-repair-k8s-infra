@@ -1,5 +1,5 @@
 resource "kubernetes_namespace_v1" "platform" {
-  for_each = toset(var.application_namespaces)
+  for_each = toset(local.platform_namespaces)
 
   metadata {
     name = each.value

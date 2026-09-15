@@ -10,6 +10,7 @@ locals {
     "k8s.io/cluster-autoscaler/enabled"               = "true"
     "k8s.io/cluster-autoscaler/${local.cluster_name}" = "owned"
   }
+  platform_namespaces = distinct(concat(var.application_namespaces, var.enable_kong ? [var.kong_namespace] : []))
   common_tags = {
     Project     = local.project_name
     Environment = var.environment

@@ -46,6 +46,22 @@ output "external_secrets_service_account_name" {
   value = module.eks_infra.external_secrets_service_account_name
 }
 
+output "kong_namespace" {
+  value = module.eks_infra.kong_namespace
+}
+
+output "kong_ingress_class" {
+  value = module.eks_infra.kong_ingress_class
+}
+
+output "newrelic_namespace" {
+  value = module.eks_infra.newrelic_namespace
+}
+
+output "newrelic_enabled" {
+  value = module.eks_infra.newrelic_enabled
+}
+
 output "cluster_autoscaler" {
   value = module.eks_infra.cluster_autoscaler
 }

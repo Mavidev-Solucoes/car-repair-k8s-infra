@@ -20,6 +20,13 @@ module "eks_infra" {
   ]
 
   single_nat_gateway = false
+
+  enable_external_secrets = var.enable_external_secrets
+  enable_kong             = var.enable_kong
+  kong_chart_version      = var.kong_chart_version
+  enable_newrelic         = var.enable_newrelic
+  newrelic_chart_version  = var.newrelic_chart_version
+
   public_access_cidrs = [
     "10.0.0.0/8"
   ]

@@ -114,6 +114,54 @@ variable "aws_load_balancer_controller_chart_version" {
   default     = "1.13.4"
 }
 
+variable "enable_newrelic" {
+  description = "Whether to install the New Relic Kubernetes monitoring bundle."
+  type        = bool
+  default     = false
+}
+
+variable "newrelic_chart_version" {
+  description = "New Relic nri-bundle Helm chart version."
+  type        = string
+  default     = "8.0.10"
+}
+
+variable "enable_kong" {
+  description = "Whether to install Kong Gateway and Kong Ingress Controller."
+  type        = bool
+  default     = false
+}
+
+variable "kong_namespace" {
+  description = "Namespace where Kong Gateway and Kong Ingress Controller are installed."
+  type        = string
+  default     = "kong"
+}
+
+variable "kong_ingress_class" {
+  description = "IngressClass name watched by Kong Ingress Controller."
+  type        = string
+  default     = "kong"
+}
+
+variable "kong_chart_version" {
+  description = "Kong official ingress Helm chart version."
+  type        = string
+  default     = "0.24.0"
+}
+
+variable "kong_gateway_image_tag" {
+  description = "Kong Gateway image tag used by the Kong ingress Helm chart."
+  type        = string
+  default     = "3.9"
+}
+
+variable "kong_ingress_controller_image_tag" {
+  description = "Kong Ingress Controller image tag used by the Kong ingress Helm chart."
+  type        = string
+  default     = "3.5"
+}
+
 variable "enable_external_secrets" {
   description = "Whether to install External Secrets Operator in the cluster."
   type        = bool
