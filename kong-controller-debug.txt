@@ -1,0 +1,200 @@
+===== CONTROLLER LOGS =====
+2026-09-15T06:31:51Z	info	Found configuration option for gated feature	{"v": 0, "feature": "RewriteURIs", "enabled": false}
+2026-09-15T06:31:51Z	info	Found configuration option for gated feature	{"v": 0, "feature": "KongServiceFacade", "enabled": false}
+2026-09-15T06:31:51Z	info	Found configuration option for gated feature	{"v": 0, "feature": "SanitizeKonnectConfigDumps", "enabled": true}
+2026-09-15T06:31:51Z	info	Found configuration option for gated feature	{"v": 0, "feature": "FallbackConfiguration", "enabled": false}
+2026-09-15T06:31:51Z	info	Found configuration option for gated feature	{"v": 0, "feature": "KongCustomEntity", "enabled": true}
+2026-09-15T06:31:51Z	info	Found configuration option for gated feature	{"v": 0, "feature": "GatewayAlpha", "enabled": false}
+2026-09-15T06:31:51Z	info	Found configuration option for gated feature	{"v": 0, "feature": "FillIDs", "enabled": true}
+2026-09-15T06:31:51Z	info	Diagnostics disabled	{"v": 0}
+2026-09-15T06:31:51Z	info	setup	Starting controller manager	{"v": 0, "release": "3.5.13", "repo": "https://github.com/Kong/kubernetes-ingress-controller.git", "commit": "eeb8a2804c6251958745af40de3e09885a069519"}
+2026-09-15T06:31:51Z	info	setup	The ingress class name has been set	{"v": 0, "value": "kong"}
+2026-09-15T06:31:51Z	info	setup	Getting the Kubernetes client configuration	{"v": 0}
+2026-09-15T06:31:51Z	info	setup	Using Kubeconfig based on fields from configuration	{"v": 0}
+W0915 06:31:51.987819       1 client_config.go:667] Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+2026-09-15T06:31:51Z	info	setup	Getting the kong admin api client configuration	{"v": 0}
+W0915 06:31:51.987934       1 client_config.go:667] Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+2026-09-15T06:31:52Z	info	setup	Configuring and building the controller manager	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Building the manager runtime scheme and loading apis into the scheme	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	DB-less mode detected with service detection, enabling leader election	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Initializing Dataplane Client	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Emitting Kubernetes events enabled, creating an event recorder for kong-client	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Setting up admission server	{"v": 0}
+2026-09-15T06:31:52Z	info	controller-runtime.certwatcher	Updated current TLS certificate	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Initializing Dataplane Synchronizer	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Starting Status Updater	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Initializing Dataplane address Discovery	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Falling back to a default address finder for UDP	{"v": 0, "reason": "no publish status address or publish service were provided"}
+2026-09-15T06:31:52Z	info	setup	Starting Enabled Controllers	{"v": 0}
+2026-09-15T06:31:52Z	info	controllers.Dynamic/Gateway	Required CustomResourceDefinitions are not installed, setting up a watch for them in case they are installed afterward	{"v": 0}
+2026-09-15T06:31:52Z	info	controllers.Dynamic/HTTPRoute	Required CustomResourceDefinitions are not installed, setting up a watch for them in case they are installed afterward	{"v": 0}
+2026-09-15T06:31:52Z	info	controllers.Dynamic/ReferenceGrant	Required CustomResourceDefinitions are not installed, setting up a watch for them in case they are installed afterward	{"v": 0}
+2026-09-15T06:31:52Z	info	controllers.Dynamic/GRPCRoute	Required CustomResourceDefinitions are not installed, setting up a watch for them in case they are installed afterward	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Starting KongLicense controller	{"v": 0}
+2026-09-15T06:31:52Z	info	setup	Inject license getter to config translator	{"v": 0, "license_getter_type": "*license.KongV1Alpha1KongLicenseReconciler"}
+2026-09-15T06:31:52Z	info	setup	Finished setting up the controller manager	{"v": 0}
+2026-09-15T06:31:52Z	info	Starting standalone health check server	{"v": 0}
+2026-09-15T06:31:52Z	info	telemetry	starting telemetry manager	{"v": 0}
+2026-09-15T06:31:52Z	info	Starting manager	{"v": 0}
+2026-09-15T06:31:52Z	info	Starting AdminAPIClientsManager loop	{"v": 0}
+2026-09-15T06:31:52Z	info	controller-runtime.metrics	Starting metrics server	{"v": 0}
+2026-09-15T06:31:52Z	info	controller-runtime.metrics	Serving metrics server	{"v": 0, "bindAddress": ":10255", "secure": false}
+2026-09-15T06:31:52Z	info	Starting admission server	{"v": 0}
+2026-09-15T06:31:52Z	info	controller-runtime.certwatcher	Starting certificate poll+watcher	{"v": 0, "interval": 10}
+2026-09-15T06:31:52Z	info	controllers.KongAdminAPIService	Starting EventSource	{"source": "kind source: *v1.EndpointSlice", "v": 0}
+I0915 06:31:52.215093       1 leaderelection.go:257] attempting to acquire leader lease kong/kong-ingress-controller-leader-kong...
+2026-09-15T06:31:52Z	info	controllers.KongAdminAPIService	Starting Controller	{"v": 0}
+2026-09-15T06:31:52Z	info	controllers.KongAdminAPIService	Starting workers	{"v": 0, "worker count": 1}
+2026-09-15T06:31:52Z	info	controllers.KongAdminAPIService	Reconciling Admin API EndpointSlice	{"v": 0, "namespace": "kong", "name": "kong-gateway-admin-5lpbn"}
+
+===== POD DESCRIBE =====
+Name:             kong-controller-6d8685c5b4-xzk2h
+Namespace:        kong
+Priority:         0
+Service Account:  kong-controller
+Node:             ip-10-30-11-253.ec2.internal/10.30.11.253
+Start Time:       Tue, 15 Sep 2026 03:21:17 -0300
+Labels:           app=kong-controller
+                  app.kubernetes.io/component=app
+                  app.kubernetes.io/instance=kong
+                  app.kubernetes.io/managed-by=Helm
+                  app.kubernetes.io/name=controller
+                  app.kubernetes.io/version=3.9
+                  helm.sh/chart=controller-3.2.0
+                  pod-template-hash=6d8685c5b4
+                  topology.kubernetes.io/region=us-east-1
+                  topology.kubernetes.io/zone=us-east-1b
+                  version=3.9
+Annotations:      kuma.io/gateway: enabled
+                  kuma.io/service-account-token-volume: kong-controller-token
+                  traffic.kuma.io/exclude-outbound-ports: 8444
+                  traffic.sidecar.istio.io/excludeOutboundPorts: 8444
+                  traffic.sidecar.istio.io/includeInboundPorts: 
+Status:           Running
+SeccompProfile:   RuntimeDefault
+IP:               10.30.11.107
+IPs:
+  IP:           10.30.11.107
+Controlled By:  ReplicaSet/kong-controller-6d8685c5b4
+Containers:
+  ingress-controller:
+    Container ID:    containerd://a9b4b75ad87471049ed559f7d3d72762877960a70ad9bc0b51c65bc6eea0dabe
+    Image:           kong/kubernetes-ingress-controller:3.5
+    Image ID:        docker.io/kong/kubernetes-ingress-controller@sha256:979f12864a13031545d58623d17af7a071b417396fbb3928a169d897b056b68f
+    Ports:           8080/TCP (webhook), 10255/TCP (cmetrics), 10254/TCP (cstatus)
+    Host Ports:      0/TCP (webhook), 0/TCP (cmetrics), 0/TCP (cstatus)
+    SeccompProfile:  RuntimeDefault
+    State:           Running
+      Started:       Tue, 15 Sep 2026 03:31:51 -0300
+    Last State:      Terminated
+      Reason:        Error
+      Exit Code:     1
+      Started:       Tue, 15 Sep 2026 03:28:40 -0300
+      Finished:      Tue, 15 Sep 2026 03:30:58 -0300
+    Ready:           True
+    Restart Count:   4
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:10254/healthz delay=5s timeout=5s period=10s #success=1 #failure=3
+    Readiness:  http-get http://:10254/readyz delay=5s timeout=5s period=10s #success=1 #failure=3
+    Environment:
+      POD_NAME:                               kong-controller-6d8685c5b4-xzk2h (v1:metadata.name)
+      POD_NAMESPACE:                          kong (v1:metadata.namespace)
+      CONTROLLER_ADMISSION_WEBHOOK_LISTEN:    0.0.0.0:8080
+      CONTROLLER_ELECTION_ID:                 kong-ingress-controller-leader-kong
+      CONTROLLER_INGRESS_CLASS:               kong
+      CONTROLLER_KONG_ADMIN_SVC:              kong/kong-gateway-admin
+      CONTROLLER_KONG_ADMIN_TLS_SKIP_VERIFY:  true
+      CONTROLLER_PUBLISH_SERVICE:             kong/kong-gateway-proxy
+    Mounts:
+      /admission-webhook from webhook-cert (ro)
+      /var/run/secrets/kubernetes.io/serviceaccount from kong-controller-token (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kong-controller-prefix-dir:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  256Mi
+  kong-controller-tmp:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  1Gi
+  kong-controller-token:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+  webhook-cert:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  kong-controller-validation-webhook-keypair
+    Optional:    false
+QoS Class:       Burstable
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age                    From               Message
+  ----     ------     ----                   ----               -------
+  Normal   Scheduled  10m                    default-scheduler  Successfully assigned kong/kong-controller-6d8685c5b4-xzk2h to ip-10-30-11-253.ec2.internal
+  Normal   Pulling    10m                    kubelet            Pulling image "kong/kubernetes-ingress-controller:3.5"
+  Normal   Pulled     10m                    kubelet            Successfully pulled image "kong/kubernetes-ingress-controller:3.5" in 2.435s (2.435s including waiting). Image size: 22263393 bytes.
+  Warning  Unhealthy  10m                    kubelet            Readiness probe failed: Get "http://10.30.11.107:10254/readyz": dial tcp 10.30.11.107:10254: connect: connection refused
+  Warning  Unhealthy  3m10s (x3 over 8m17s)  kubelet            Readiness probe failed: HTTP probe failed with statuscode: 500
+  Warning  Unhealthy  74s (x2 over 10m)      kubelet            Liveness probe failed: Get "http://10.30.11.107:10254/healthz": dial tcp 10.30.11.107:10254: connect: connection refused
+  Warning  BackOff    64s (x9 over 6m19s)    kubelet            Back-off restarting failed container ingress-controller in pod kong-controller-6d8685c5b4-xzk2h_kong(3172a9de-1245-4a2b-8b26-ed335190aea2)
+  Normal   Created    21s (x5 over 10m)      kubelet            Container created
+  Normal   Started    21s (x5 over 10m)      kubelet            Container started
+  Normal   Pulled     21s (x4 over 8m39s)    kubelet            Container image "kong/kubernetes-ingress-controller:3.5" already present on machine and can be accessed by the pod
+
+===== EVENTS =====
+10m         Normal    Started                        pod/kong-gateway-d94748dd5-j6bgl            Container started
+10m         Normal    Created                        pod/kong-gateway-d94748dd5-j6bgl            Container created
+10m         Normal    Pulled                         pod/kong-gateway-d94748dd5-j6bgl            Container image "kong:3.9" already present on machine and can be accessed by the pod
+10m         Normal    Started                        pod/kong-gateway-d94748dd5-j6bgl            Container started
+10m         Normal    Scheduled                      pod/kong-gateway-d94748dd5-bb4ch            Successfully assigned kong/kong-gateway-d94748dd5-bb4ch to ip-10-30-10-243.ec2.internal
+10m         Normal    SuccessfulCreate               replicaset/kong-gateway-d94748dd5           Created pod: kong-gateway-d94748dd5-bb4ch
+10m         Warning   Unhealthy                      pod/kong-controller-6d8685c5b4-xzk2h        Readiness probe failed: Get "http://10.30.11.107:10254/readyz": dial tcp 10.30.11.107:10254: connect: connection refused
+10m         Normal    SuccessfulRescale              horizontalpodautoscaler/kong-gateway        New size: 2; reason: Current number of replicas below Spec.MinReplicas
+10m         Normal    ScalingReplicaSet              deployment/kong-gateway                     Scaled up replica set kong-gateway-d94748dd5 from 1 to 2
+10m         Normal    Pulling                        pod/kong-gateway-d94748dd5-bb4ch            Pulling image "kong:3.9"
+10m         Normal    LeaderElection                 lease/kong-ingress-controller-leader-kong   kong-controller-6d8685c5b4-xzk2h_01e8568b-61ac-4187-accd-653d2e233d59 became leader
+10m         Warning   Unhealthy                      pod/kong-gateway-d94748dd5-j6bgl            Readiness probe failed: HTTP probe failed with statuscode: 503
+10m         Normal    Pulled                         pod/kong-gateway-d94748dd5-bb4ch            Successfully pulled image "kong:3.9" in 5.572s (5.572s including waiting). Image size: 120471067 bytes.
+10m         Normal    Created                        pod/kong-gateway-d94748dd5-bb4ch            Container created
+10m         Normal    Started                        pod/kong-gateway-d94748dd5-bb4ch            Container started
+10m         Normal    Pulled                         pod/kong-gateway-d94748dd5-bb4ch            Container image "kong:3.9" already present on machine and can be accessed by the pod
+10m         Normal    Started                        pod/kong-gateway-d94748dd5-bb4ch            Container started
+10m         Normal    Created                        pod/kong-gateway-d94748dd5-bb4ch            Container created
+10m         Warning   FailedGetResourceMetric        horizontalpodautoscaler/kong-gateway        failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+10m         Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/kong-gateway        invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+9m55s       Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/kong-gateway        invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+9m55s       Warning   FailedGetResourceMetric        horizontalpodautoscaler/kong-gateway        failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+9m19s       Normal    KongConfigurationSucceeded     pod/kong-controller-6d8685c5b4-xzk2h        successfully applied Kong configuration to https://10.30.11.140:8444
+8m20s       Normal    LeaderElection                 lease/kong-ingress-controller-leader-kong   kong-controller-6d8685c5b4-xzk2h_4077fded-bc80-43b3-85d7-5e7d97b56ad8 became leader
+8m17s       Warning   Unhealthy                      pod/kong-gateway-d94748dd5-bb4ch            Readiness probe failed: HTTP probe failed with statuscode: 503
+7m39s       Normal    KongConfigurationSucceeded     pod/kong-controller-6d8685c5b4-xzk2h        successfully applied Kong configuration to https://10.30.10.70:8444
+7m36s       Normal    KongConfigurationSucceeded     pod/kong-controller-6d8685c5b4-xzk2h        successfully applied Kong configuration to https://10.30.11.140:8444
+5m53s       Normal    LeaderElection                 lease/kong-ingress-controller-leader-kong   kong-controller-6d8685c5b4-xzk2h_480ae2d1-4502-4ba5-8c90-a4daa5687efc became leader
+5m12s       Normal    KongConfigurationSucceeded     pod/kong-controller-6d8685c5b4-xzk2h        successfully applied Kong configuration to https://10.30.10.70:8444
+5m9s        Normal    KongConfigurationSucceeded     pod/kong-controller-6d8685c5b4-xzk2h        successfully applied Kong configuration to https://10.30.11.140:8444
+3m14s       Normal    LeaderElection                 lease/kong-ingress-controller-leader-kong   kong-controller-6d8685c5b4-xzk2h_58879213-d482-4921-94e4-b057dd756423 became leader
+3m10s       Warning   Unhealthy                      pod/kong-controller-6d8685c5b4-xzk2h        Readiness probe failed: HTTP probe failed with statuscode: 500
+2m33s       Normal    KongConfigurationSucceeded     pod/kong-controller-6d8685c5b4-xzk2h        successfully applied Kong configuration to https://10.30.10.70:8444
+2m30s       Normal    KongConfigurationSucceeded     pod/kong-controller-6d8685c5b4-xzk2h        successfully applied Kong configuration to https://10.30.11.140:8444
+74s         Warning   Unhealthy                      pod/kong-controller-6d8685c5b4-xzk2h        Liveness probe failed: Get "http://10.30.11.107:10254/healthz": dial tcp 10.30.11.107:10254: connect: connection refused
+64s         Warning   BackOff                        pod/kong-controller-6d8685c5b4-xzk2h        Back-off restarting failed container ingress-controller in pod kong-controller-6d8685c5b4-xzk2h_kong(3172a9de-1245-4a2b-8b26-ed335190aea2)
+21s         Normal    Pulled                         pod/kong-controller-6d8685c5b4-xzk2h        Container image "kong/kubernetes-ingress-controller:3.5" already present on machine and can be accessed by the pod
+21s         Normal    Created                        pod/kong-controller-6d8685c5b4-xzk2h        Container created
+21s         Normal    Started                        pod/kong-controller-6d8685c5b4-xzk2h        Container started
+1s          Normal    LeaderElection                 lease/kong-ingress-controller-leader-kong   kong-controller-6d8685c5b4-xzk2h_6ffd9caf-1255-4a8f-aa18-33c8f6521901 became leader

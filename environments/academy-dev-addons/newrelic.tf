@@ -14,7 +14,6 @@ resource "helm_release" "newrelic" {
     yamlencode({
       global = {
         cluster                = local.cluster_name
-        provider               = "EKS"
         customSecretName       = var.newrelic_license_secret_name
         customSecretLicenseKey = var.newrelic_license_secret_key
         customAttributes = {

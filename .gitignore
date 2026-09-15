@@ -7,3 +7,22 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+*.tfvars
+
+# Manter exemplos versionados
+!*.tfvars.example
+!**/*.tfvars.example
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Diagnósticos locais AWS Academy
+academy-capabilities.txt
+eks-role-policies.txt
