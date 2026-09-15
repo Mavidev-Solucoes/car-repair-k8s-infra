@@ -1,0 +1,81 @@
+name: CD - EKS Platform
+
+on:
+  push:
+    branches: [hml, prod]
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Ambiente de destino
+        required: true
+        type: choice
+        options:
+          - hml
+          - prod
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: k8s-${{ github.event_name == 'workflow_dispatch' && inputs.environment || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy EKS Platform
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || github.ref_name }}
+
+    env:
+      TARGET_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || github.ref_name }}
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+      TF_VAR_enable_external_secrets: ${{ vars.ENABLE_EXTERNAL_SECRETS || 'true' }}
+      TF_VAR_enable_kong: ${{ vars.ENABLE_KONG || 'true' }}
+      TF_VAR_enable_newrelic: ${{ vars.ENABLE_NEW_RELIC || 'true' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate target
+        shell: bash
+        run: |
+          test "${TARGET_ENV}" = "hml" || test "${TARGET_ENV}" = "prod"
+          test -d "environments/${TARGET_ENV}"
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: |
+          terraform \
+            -chdir="environments/${TARGET_ENV}" \
+            init \
+            -input=false
+
+      - name: Terraform Plan
+        run: |
+          terraform \
+            -chdir="environments/${TARGET_ENV}" \
+            plan \
+            -input=false \
+            -out=tfplan
+
+      - name: Terraform Apply
+        run: |
+          terraform \
+            -chdir="environments/${TARGET_ENV}" \
+            apply \
+            -input=false \
+            -auto-approve \
+            tfplan

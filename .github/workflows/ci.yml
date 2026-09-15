@@ -2,11 +2,9 @@ name: CI - Terraform Kubernetes
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main, hml, prod]
   push:
-    branches:
-      - main
+    branches: [main, hml, prod]
   workflow_dispatch:
 
 permissions:
@@ -17,8 +15,6 @@ jobs:
     name: Terraform Format and Validate
     runs-on: ubuntu-latest
 
-    # O provider New Relic exige NEW_RELIC_API_KEY durante terraform validate.
-    # Este valor é apenas um placeholder de CI; validate não acessa a API.
     env:
       NEW_RELIC_API_KEY: ci-validation-placeholder-not-a-secret
 
