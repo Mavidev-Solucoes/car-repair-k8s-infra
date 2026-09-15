@@ -238,22 +238,29 @@ kubectl logs -n newrelic -l app.kubernetes.io/name=nri-kube-events --tail=100
 
 ### New Relic dashboards e alerts
 
-Dashboards e alertas sao opcionais e independentes da instalacao do agente:
+Dashboards, alert policies e NRQL alert conditions ficam separados da stack AWS principal no root:
 
-```hcl
-enable_newrelic_observability_resources = true
-newrelic_account_id                     = 1234567
-newrelic_region                         = "US" # US, EU ou JP
+```text
+newrelic-observability/
 ```
 
-Autenticacao do provider:
+Esse root usa o provider oficial `newrelic/newrelic` fixado em `3.97.3` e autentica somente por variáveis de ambiente:
 
-- `NEW_RELIC_LICENSE_KEY`: chave de ingestao de telemetria usada por agentes/APM/Kubernetes.
-- `NEW_RELIC_API_KEY`: User API Key usada pelo Terraform para administrar dashboards e alertas.
+- `NEW_RELIC_ACCOUNT_ID`
+- `NEW_RELIC_API_KEY`
+- `NEW_RELIC_REGION`
 
-Nao coloque `NEW_RELIC_API_KEY` em `tfvars`, state, YAML, codigo, README ou outputs. Configure essa variavel no ambiente local ou no CI.
+Não coloque `NEW_RELIC_API_KEY` em `tfvars`, state, YAML, código, README ou outputs. Os roots `environments/dev`, `environments/prod` e `environments/academy-dev` não carregam o provider New Relic e não exigem `NEW_RELIC_API_KEY` para `terraform plan`.
 
-O provider oficial `newrelic/newrelic` fica fixado na versao `3.97.3`. Os recursos recebem `newrelic_account_id`; a credencial administrativa vem do ambiente. Ao habilitar dashboards/alerts, configure a regiao do provider pelo ambiente conforme a conta usada e mantenha `newrelic_region` alinhado para documentar o ambiente.
+Exemplo:
+
+```bash
+export NEW_RELIC_ACCOUNT_ID=1234567
+export NEW_RELIC_REGION=US
+export NEW_RELIC_API_KEY=...
+terraform -chdir=newrelic-observability init
+terraform -chdir=newrelic-observability plan -var-file=environments/dev.tfvars
+```
 
 Arquitetura dos sinais:
 
@@ -322,6 +329,188 @@ Notificacoes:
 - Esta stack cria apenas alert policy e conditions.
 - Nao cria Slack, webhook, email falso ou recursos legados/deprecated de alert channel.
 - Notification destination/workflow deve ser conectado posteriormente quando houver destino real.
+
+## AWS Academy deployment
+
+O AWS Academy Learner Lab usa sessão `assumed-role/voclabs` e pode negar explicitamente `iam:GetRole` sobre `voclabs`. Por isso, o Academy não usa `terraform-aws-modules/eks/aws`: o root `environments/academy-dev` cria EKS com recursos nativos `aws_eks_cluster`, `aws_eks_node_group` e `aws_eks_addon`, recebendo por variável as roles já fornecidas pelo laboratório:
+
+- `academy_eks_cluster_role_arn`: role cujo nome contém `LabEksClusterRole`, trust `eks.amazonaws.com`.
+- `academy_eks_node_role_arn`: role cujo nome contém `LabEksNodeRole`, trust `ec2.amazonaws.com`.
+
+Esse root não cria nem modifica `aws_iam_role`, `aws_iam_policy`, `aws_iam_role_policy`, `aws_iam_role_policy_attachment` ou `aws_iam_openid_connect_provider`. `LabRole` não é usado como role genérica de pods.
+
+### Roots Academy
+
+```text
+environments/academy-dev/
+environments/academy-dev-addons/
+scripts/academy-sync-secrets.sh
+```
+
+`environments/academy-dev` é exclusivamente AWS base:
+
+- VPC, subnets públicas, subnets privadas, Internet Gateway e NAT Gateway
+- EKS `car-repair-dev` com Kubernetes `1.35`
+- Managed Node Group em subnets privadas, por padrão `t3.medium`, min `2`, desired `2`, max `3`
+- EKS addons `vpc-cni`, `coredns` e `kube-proxy` com `most_recent = true`
+- ECR `car-repair-app` com `scan_on_push`, tags imutáveis e lifecycle policy
+- outputs para integração com outras stacks
+
+`environments/academy-dev` não usa providers Kubernetes ou Helm.
+
+`environments/academy-dev-addons` consome o state da base via `terraform_remote_state` e só deve ser executado depois que o cluster existir. Ele instala:
+
+- Metrics Server via Helm
+- Kong Gateway e Kong Ingress Controller via Helm
+- New Relic `nri-bundle` via Helm
+- Network Load Balancer público para o proxy do Kong
+
+### Backend Academy
+
+O bucket de state é compartilhado com os ambientes normais, mas as keys são separadas:
+
+```text
+bucket: car-repair-k8s-infra-terraform-state
+base:   academy-dev/base/terraform.tfstate
+addons: academy-dev/addons/terraform.tfstate
+```
+
+Os backends usam `encrypt = true` e `use_lockfile = true`, sem DynamoDB. O root Academy não tenta criar nem gerenciar novamente o bucket.
+
+### Base
+
+Crie `environments/academy-dev/terraform.tfvars` a partir de `terraform.tfvars.example`:
+
+```hcl
+aws_region         = "us-east-1"
+kubernetes_version = "1.35"
+
+public_access_cidrs = ["<YOUR_PUBLIC_IP>/32"]
+
+academy_eks_cluster_role_arn = "<LAB_EKS_CLUSTER_ROLE_ARN>"
+academy_eks_node_role_arn    = "<LAB_EKS_NODE_ROLE_ARN>"
+
+node_min_size     = 2
+node_desired_size = 2
+node_max_size     = 3
+```
+
+Não use `0.0.0.0/0` como CIDR administrativo do endpoint público no Academy real.
+
+Comandos:
+
+```bash
+terraform -chdir=environments/academy-dev init
+terraform -chdir=environments/academy-dev plan
+terraform -chdir=environments/academy-dev apply
+```
+
+### Kubeconfig
+
+```bash
+aws eks update-kubeconfig \
+  --region us-east-1 \
+  --name car-repair-dev
+```
+
+### Validação da base
+
+```bash
+kubectl get nodes
+kubectl get pods -A
+```
+
+### Secrets no Academy
+
+No Academy não instalamos External Secrets Operator. A arquitetura normal continua usando:
+
+```text
+Secrets Manager -> External Secrets Operator -> Kubernetes Secret
+```
+
+O fallback Academy é local e operacional:
+
+```bash
+scripts/academy-sync-secrets.sh newrelic
+```
+
+Esse script deve ser executado pelo operador autenticado no AWS Academy. Ele busca `car-repair/dev/newrelic` no AWS Secrets Manager e cria/atualiza `newrelic/newrelic-license` com a chave `licenseKey`, usando `kubectl create secret ... --dry-run=client | kubectl apply`. Ele não grava o segredo em arquivo permanente e não imprime o valor no stdout.
+
+O script já reserva alvos futuros para `database`, `jwt` e `smtp`, mas não implementa valores hardcoded.
+
+### Addons
+
+Depois da base, kubeconfig e secret New Relic:
+
+```bash
+terraform -chdir=environments/academy-dev-addons init
+terraform -chdir=environments/academy-dev-addons plan
+terraform -chdir=environments/academy-dev-addons apply
+```
+
+Validação:
+
+```bash
+kubectl get pods -n kong
+kubectl get svc -n kong
+kubectl get pods -n newrelic
+```
+
+### Kong sem AWS Load Balancer Controller
+
+No Academy não instalamos AWS Load Balancer Controller, porque ele normalmente depende de IRSA e permissões IAM dedicadas. O Kong usa Service `NodePort` com `nodePort` fixo, por padrão `30080`.
+
+O Terraform cria um AWS Network Load Balancer internet-facing nas public subnets e um target group `target_type = "instance"` apontando para o NodePort nos managed nodes. O target group é anexado ao Auto Scaling Group controlado pelo Managed Node Group do EKS.
+
+Observação AWS: Network Load Balancer é L4, portanto o listener público é `TCP` na porta `80`, encaminhando tráfego HTTP para o NodePort do Kong. Não há TLS fake. Kong Admin API permanece `ClusterIP`; Kong Manager, Portal e Portal API ficam desabilitados.
+
+Segurança:
+
+- Security Group do NLB permite entrada TCP/80 pelos CIDRs de `kong_nlb_ingress_cidrs`, por padrão internet.
+- Security Group dos nodes recebe regra de entrada no NodePort somente a partir do Security Group do NLB.
+- O output `node_security_group_id` da base é o primary security group do EKS. O EKS associa esse SG às ENIs dos managed nodes, então ele é válido como source para RDS PostgreSQL TCP/5432 no `car-repair-db-infra`.
+
+### Scaling no Academy
+
+No Academy não instalamos Cluster Autoscaler nesta versão. Ele exigiria permissões AWS específicas para um pod, normalmente via IRSA, e o Learner Lab não permite gerenciar a role OIDC dedicada necessária. Não usamos `LabRole` em pods e não colocamos AWS access keys em Kubernetes.
+
+O HPA da aplicação continua funcionando para escalar pods. A capacidade de nodes fica limitada ao intervalo configurado no Managed Node Group, por padrão min `2`, desired `2`, max `3`. Os ambientes normais continuam usando Cluster Autoscaler com IRSA.
+
+### New Relic no Academy
+
+O root de addons instala `newrelic/nri-bundle` na versão padrão do projeto, usando `global.customSecretName = newrelic-license` e `global.customSecretLicenseKey = licenseKey`. A license key não entra em Terraform variables, `tfvars`, YAML, outputs ou state.
+
+Antes do Helm release, o root de addons executa uma checagem externa que confirma apenas a existência do Secret `newrelic/newrelic-license`; ela não lê nem persiste o conteúdo do Secret.
+
+### Custos no Academy
+
+Os principais componentes cobrados serão:
+
+- EKS control plane
+- EC2 nodes
+- NAT Gateway
+- Network Load Balancer
+
+Não há preço fixo documentado aqui porque os valores variam por região, data e política do laboratório.
+
+### Destroy Academy
+
+Ordem recomendada:
+
+1. Destruir workloads futuros que dependam do cluster.
+2. Destruir addons:
+
+   ```bash
+   terraform -chdir=environments/academy-dev-addons destroy
+   ```
+
+3. Destruir base:
+
+   ```bash
+   terraform -chdir=environments/academy-dev destroy
+   ```
+
+O bucket `car-repair-k8s-infra-terraform-state` nunca deve ser destruído automaticamente por esses roots.
 
 ## Primeiro deploy DEV
 
@@ -454,15 +643,15 @@ kubectl get ingressclass
 
 ### Observabilidade via Terraform depois da infraestrutura
 
-Depois que a infraestrutura estiver funcional e a telemetria estiver chegando no New Relic, habilite os recursos de dashboard/alerts:
+Depois que a infraestrutura estiver funcional e a telemetria estiver chegando no New Relic, use o root separado:
 
-```hcl
-enable_newrelic_observability_resources = true
-newrelic_account_id                     = <account-id>
-newrelic_region                         = "US"
+```bash
+terraform -chdir=newrelic-observability init
+terraform -chdir=newrelic-observability plan -var-file=environments/dev.tfvars
+terraform -chdir=newrelic-observability apply -var-file=environments/dev.tfvars
 ```
 
-Configure `NEW_RELIC_API_KEY` no ambiente local ou no CI. Quando a conta nao for US, configure tambem a regiao suportada pelo provider no ambiente, alinhada ao valor de `newrelic_region`.
+Configure `NEW_RELIC_ACCOUNT_ID`, `NEW_RELIC_API_KEY` e `NEW_RELIC_REGION` no ambiente local ou no CI. Quando a conta nao for US, mantenha `NEW_RELIC_REGION` alinhado ao `newrelic_region` do tfvars.
 
 ## Pré-requisitos
 
@@ -478,6 +667,8 @@ Os ambientes `dev` e `prod` usam backend remoto S3 com locks nativos por arquivo
 - Bucket: `car-repair-k8s-infra-terraform-state`
 - Dev key: `dev/terraform.tfstate`
 - Prod key: `prod/terraform.tfstate`
+- Academy base key: `academy-dev/base/terraform.tfstate`
+- Academy addons key: `academy-dev/addons/terraform.tfstate`
 - `encrypt = true`
 - `use_lockfile = true`
 - Sem DynamoDB para locking

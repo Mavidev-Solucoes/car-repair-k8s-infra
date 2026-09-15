@@ -40,10 +40,10 @@ enable_newrelic_observability_resources = false
 kong_chart_version     = "0.24.0"
 newrelic_chart_version = "8.0.10"
 
-newrelic_app_name     = "car-repair-app-dev"
-business_environment  = "Development"
-newrelic_region       = "US"
-newrelic_account_id   = null
+newrelic_app_name    = "car-repair-app-dev"
+business_environment = "Development"
+newrelic_region      = "US"
+newrelic_account_id  = null
 
 eks_managed_node_groups = {
   system = {
@@ -76,3 +76,4 @@ eks_managed_node_groups = {
     }
   }
 }
+

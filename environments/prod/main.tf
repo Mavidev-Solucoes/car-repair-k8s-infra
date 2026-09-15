@@ -21,16 +21,11 @@ module "eks_infra" {
 
   single_nat_gateway = false
 
-  enable_external_secrets                 = var.enable_external_secrets
-  enable_kong                             = var.enable_kong
-  kong_chart_version                      = var.kong_chart_version
-  enable_newrelic                         = var.enable_newrelic
-  newrelic_chart_version                  = var.newrelic_chart_version
-  enable_newrelic_observability_resources = var.enable_newrelic_observability_resources
-  newrelic_account_id                     = var.newrelic_account_id
-  newrelic_region                         = var.newrelic_region
-  newrelic_app_name                       = var.newrelic_app_name
-  business_environment                    = var.business_environment
+  enable_external_secrets = var.enable_external_secrets
+  enable_kong             = var.enable_kong
+  kong_chart_version      = var.kong_chart_version
+  enable_newrelic         = var.enable_newrelic
+  newrelic_chart_version  = var.newrelic_chart_version
 
   public_access_cidrs = [
     "10.0.0.0/8"
