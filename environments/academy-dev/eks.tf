@@ -30,7 +30,7 @@ resource "aws_eks_cluster" "this" {
     subnet_ids              = concat(aws_subnet.private[*].id, aws_subnet.public[*].id)
     endpoint_public_access  = true
     endpoint_private_access = true
-    public_access_cidrs     = var.public_access_cidrs
+    public_access_cidrs     = var.allow_ci_api_access ? ["0.0.0.0/0"] : var.public_access_cidrs
   }
 
   tags = {
