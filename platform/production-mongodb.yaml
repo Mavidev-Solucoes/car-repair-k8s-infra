@@ -1,0 +1,79 @@
+# MongoDB exclusivo do production-service. Mesma observação dos Postgres sobre o emptyDir no AWS Academy.
+apiVersion: v1
+kind: Service
+metadata:
+  name: production-mongodb
+  labels:
+    app.kubernetes.io/name: production-mongodb
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: car-repair
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: production-mongodb
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: mongodb
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: production-mongodb
+  labels:
+    app.kubernetes.io/name: production-mongodb
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: car-repair
+spec:
+  serviceName: production-mongodb
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: production-mongodb
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: production-mongodb
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: car-repair
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:7.0
+          ports:
+            - name: mongodb
+              containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: production-mongodb
+                  key: username
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: production-mongodb
+                  key: password
+          readinessProbe:
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: mongodb
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 768Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+      volumes:
+        - name: data
+          emptyDir: {}

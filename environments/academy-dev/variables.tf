@@ -56,6 +56,27 @@ variable "public_access_cidrs" {
   }
 }
 
+variable "allow_ci_api_access" {
+  description = <<-EOT
+    Libera o endpoint público da API do EKS para qualquer IP, para o CD dos microsserviços (GitHub-hosted runners,
+    que não têm IP fixo) conseguir fazer o deploy. O acesso continua exigindo credencial IAM do lab. Com false,
+    vale só public_access_cidrs.
+  EOT
+  type        = bool
+  default     = true
+}
+
+variable "service_ecr_repositories" {
+  description = "Repositórios ECR dos microsserviços da fase 4, um por serviço."
+  type        = list(string)
+  default = [
+    "car-repair-os-service",
+    "car-repair-billing-service",
+    "car-repair-production-service",
+    "car-repair-saga-orchestrator"
+  ]
+}
+
 variable "academy_eks_cluster_role_arn" {
   description = "ARN of the Academy-provided LabEksClusterRole. Terraform does not create or modify this role."
   type        = string
@@ -87,13 +108,13 @@ variable "node_min_size" {
 variable "node_desired_size" {
   description = "Desired size of the Academy managed node group."
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "node_max_size" {
   description = "Maximum size of the Academy managed node group."
   type        = number
-  default     = 3
+  default     = 4
 }
 
 variable "node_disk_size" {

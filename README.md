@@ -345,15 +345,19 @@ Esse root não cria nem modifica `aws_iam_role`, `aws_iam_policy`, `aws_iam_role
 environments/academy-dev/
 environments/academy-dev-addons/
 scripts/academy-sync-secrets.sh
+scripts/academy-bootstrap-platform.sh
+scripts/academy-github-credentials.sh
+platform/
 ```
 
 `environments/academy-dev` é exclusivamente AWS base:
 
 - VPC, subnets públicas, subnets privadas, Internet Gateway e NAT Gateway
 - EKS `car-repair-dev` com Kubernetes `1.35`
-- Managed Node Group em subnets privadas, por padrão `t3.medium`, min `2`, desired `2`, max `3`
+- Managed Node Group em subnets privadas, por padrão `t3.medium`, min `2`, desired `3`, max `4` (o terceiro nó comporta os microsserviços da fase 4, seus bancos e o RabbitMQ)
 - EKS addons `vpc-cni`, `coredns` e `kube-proxy` com `most_recent = true`
 - ECR `car-repair-app` com `scan_on_push`, tags imutáveis e lifecycle policy
+- ECR de cada microsserviço da fase 4 (`car-repair-os-service`, `car-repair-billing-service`, `car-repair-production-service`, `car-repair-saga-orchestrator`), também com tags imutáveis
 - outputs para integração com outras stacks
 
 `environments/academy-dev` não usa providers Kubernetes ou Helm.
@@ -391,11 +395,13 @@ academy_eks_cluster_role_arn = "<LAB_EKS_CLUSTER_ROLE_ARN>"
 academy_eks_node_role_arn    = "<LAB_EKS_NODE_ROLE_ARN>"
 
 node_min_size     = 2
-node_desired_size = 2
-node_max_size     = 3
+node_desired_size = 3
+node_max_size     = 4
+
+allow_ci_api_access = true
 ```
 
-Não use `0.0.0.0/0` como CIDR administrativo do endpoint público no Academy real.
+Não use `0.0.0.0/0` em `public_access_cidrs`. Para o CD dos microsserviços, que roda em runners do GitHub sem IP fixo, use `allow_ci_api_access = true`: ele libera o endpoint público da API para qualquer IP, mas todo acesso continua exigindo credencial IAM do lab, e o cluster só existe durante a sessão. Com `false`, vale apenas `public_access_cidrs` e o deploy precisa ser feito da sua máquina.
 
 Comandos:
 
@@ -511,6 +517,50 @@ Ordem recomendada:
    ```
 
 O bucket `car-repair-k8s-infra-terraform-state` nunca deve ser destruído automaticamente por esses roots.
+
+## Microsserviços da fase 4 no AWS Academy
+
+Os quatro microsserviços (`car-repair-os-service`, `car-repair-billing-service`, `car-repair-production-service` e `car-repair-saga-orchestrator`) rodam no namespace `car-repair`, junto com as dependências que este repositório sobe em `platform/`:
+
+| Componente | Usado por | Observação |
+|---|---|---|
+| `os-postgres` | os-service | Postgres exclusivo, usuário `os` |
+| `billing-postgres` | billing-service | Postgres exclusivo, usuário `billing` |
+| `saga-postgres` | saga-orchestrator | Postgres exclusivo, usuário `saga` |
+| `production-mongodb` | production-service | MongoDB exclusivo |
+| `rabbitmq` | os, billing, production e saga | broker da saga (exchanges `car-repair.events` e `car-repair.commands`) |
+
+Cada serviço só recebe a credencial do próprio banco: nenhum serviço consegue acessar o banco de outro. As senhas são geradas por `scripts/academy-bootstrap-platform.sh` na primeira execução em cada cluster e ficam só em Secrets do Kubernetes.
+
+O Academy não tem driver EBS nem IRSA para instalá-lo, e o cluster é recriado a cada sessão. Por isso os bancos e o RabbitMQ usam `emptyDir`: os dados duram enquanto o pod existir. Em um ambiente permanente, troque por `volumeClaimTemplates` (gp3) ou por serviços gerenciados (RDS, DocumentDB, Amazon MQ).
+
+### Roteiro de cada sessão do lab
+
+1. Inicie o lab e copie o bloco de "AWS Details > AWS CLI" para `~/.aws/credentials`.
+2. Suba a base e os add-ons (Kong, Metrics Server, New Relic):
+
+   ```bash
+   terraform -chdir=environments/academy-dev apply
+   terraform -chdir=environments/academy-dev-addons apply
+   ```
+
+3. Atualize as credenciais no GitHub, suba a plataforma e faça o deploy dos quatro serviços:
+
+   ```bash
+   scripts/academy-github-credentials.sh --deploy
+   ```
+
+   O script grava `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` e `AWS_SESSION_TOKEN` neste repositório e nos quatro dos serviços, roda o workflow `Platform` e dispara o `CD` de cada serviço. Sem `--deploy`, só atualiza as credenciais.
+
+4. Descubra o endereço público do Kong:
+
+   ```bash
+   kubectl -n kong get svc -o wide
+   ```
+
+   As rotas ficam em `http://<NLB do Kong>/api/...`: `customers`, `vehicles` e `service-orders` (os), `budgets` e `payments` (billing), `work-orders` (production) e `sagas` (saga).
+
+Depois disso, cada merge na `main` de um serviço faz o deploy sozinho: o `CD` roda após o CI verde, publica a imagem no ECR com a tag do commit e aplica `k8s/overlays/academy-dev`. Com o lab desligado, o job de deploy só registra um aviso e termina sem falhar.
 
 ## Primeiro deploy DEV
 

@@ -52,3 +52,8 @@ output "oidc_provider_arn" {
   description = "IAM OIDC provider ARN. Null in Academy because this root intentionally does not create aws_iam_openid_connect_provider."
   value       = null
 }
+
+output "service_ecr_repository_urls" {
+  description = "URLs dos repositórios ECR dos microsserviços, por nome."
+  value       = { for name, repository in aws_ecr_repository.services : name => repository.repository_url }
+}

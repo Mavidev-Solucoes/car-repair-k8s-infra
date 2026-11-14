@@ -1,0 +1,81 @@
+# Postgres exclusivo do os-service: nenhum outro serviço tem credencial para este banco.
+# No AWS Academy o cluster é recriado a cada sessão e não há driver EBS, por isso o dado fica em emptyDir.
+# Em produção, trocar por volumeClaimTemplates (gp3) ou por um RDS dedicado.
+apiVersion: v1
+kind: Service
+metadata:
+  name: os-postgres
+  labels:
+    app.kubernetes.io/name: os-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: car-repair
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: os-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: os-postgres
+  labels:
+    app.kubernetes.io/name: os-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: car-repair
+spec:
+  serviceName: os-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: os-postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: os-postgres
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: car-repair
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: car_repair_os
+            - name: POSTGRES_USER
+              value: os
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: os-postgres
+                  key: password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "os", "-d", "car_repair_os"]
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "os", "-d", "car_repair_os"]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          emptyDir: {}

@@ -7,5 +7,8 @@ academy_eks_cluster_role_arn = "<LAB_EKS_CLUSTER_ROLE_ARN>"
 academy_eks_node_role_arn    = "<LAB_EKS_NODE_ROLE_ARN>"
 
 node_min_size     = 2
-node_desired_size = 2
-node_max_size     = 3
+node_desired_size = 3
+node_max_size     = 4
+
+# true: libera a API do EKS para o CD dos microsserviços (runners do GitHub). false: só public_access_cidrs.
+allow_ci_api_access = true
