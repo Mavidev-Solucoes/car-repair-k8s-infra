@@ -567,6 +567,26 @@ KONG="http://$(kubectl -n kong get svc -o jsonpath='{.items[?(@.spec.type=="Load
 OS_URL=$KONG BILLING_URL=$KONG PRODUCTION_URL=$KONG SAGA_URL=$KONG scripts/e2e-saga.sh
 ```
 
+### Observabilidade: New Relic APM e trace distribuído
+
+Além do `nri-bundle` (métricas, eventos e logs do cluster, instalado pelos add-ons), cada serviço roda com o agente .NET do New Relic dentro da imagem:
+
+- o Dockerfile de cada serviço instala o agente (`NEW_RELIC_AGENT_VERSION`, amd64 ou arm64) com o profiler desligado; o ConfigMap do k8s liga (`CORECLR_ENABLE_PROFILING=1`) e define `NEW_RELIC_APP_NAME=car-repair-<serviço>`;
+- a license vem do Secret `car-repair/newrelic-license`, que `scripts/academy-bootstrap-platform.sh` copia de `newrelic/newrelic-license` (criado por `scripts/academy-sync-secrets.sh newrelic`). Sem o Secret, o serviço sobe normalmente, só não envia dados;
+- o trace atravessa o RabbitMQ: quem publica grava `traceparent`/`tracestate` (W3C) e os headers `newrelic` nos headers da mensagem, e quem consome abre uma transação `RabbitMQ/<tipo da mensagem>` que aceita esses headers (`MessageTracing` no `Infrastructure` de cada serviço). Cada ação na API vira um trace que segue a saga até o próximo passo humano: abrir a OS (os → saga → billing → saga), aprovar o orçamento (billing → saga → billing → saga → production) e concluir a execução (production → saga → os);
+- cada transação de consumo leva o atributo `correlationId` (id da OS), que junta os traces da mesma OS em qualquer serviço.
+
+Consultas úteis (NRQL):
+
+```sql
+-- transações de uma OS em todos os serviços
+SELECT appName, name, duration FROM Transaction WHERE correlationId = '<id da OS>' SINCE 1 hour ago
+-- traces que passaram por mais de um serviço
+SELECT count(*) FROM Span WHERE appName LIKE 'car-repair-%' FACET trace.id, appName SINCE 30 minutes ago LIMIT 20
+```
+
+No New Relic, abra **APM & Services > car-repair-os-service > Distributed tracing** e escolha um trace de `POST /api/service-orders`: o mapa mostra os serviços e as filas entre eles. O trace da aprovação do orçamento (`POST /api/budgets/{id}/approve`, no billing) é o que passa por mais serviços.
+
 ### Teste ponta a ponta sem o Academy
 
 O workflow **E2E Kubernetes (kind)** sobe um cluster kind dentro do runner do GitHub, aplica `platform/` e os manifests `k8s/overlays/academy-dev` da `main` de cada serviço (os mesmos do EKS) e roda `scripts/e2e-saga.sh` nos três cenários: fluxo feliz, pagamento recusado e falha na execução, conferindo o estado final da OS, do orçamento, do pagamento e da saga. Roda em PRs que mexem na plataforma, toda segunda-feira e pelo botão "Run workflow". Para rodar na sua máquina, com os quatro repositórios dos serviços lado a lado:

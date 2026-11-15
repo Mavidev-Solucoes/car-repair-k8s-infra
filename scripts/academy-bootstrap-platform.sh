@@ -41,6 +41,18 @@ ensure_secret rabbitmq \
   --from-literal=username=car-repair \
   --from-literal=password="$(random_password)"
 
+# License do New Relic para o APM dos serviços: copia newrelic/newrelic-license (criado por
+# scripts/academy-sync-secrets.sh newrelic) para o namespace dos serviços, sem imprimir o valor.
+if license_key="$(kubectl -n newrelic get secret newrelic-license -o jsonpath='{.data.licenseKey}' 2>/dev/null)" \
+  && [ -n "${license_key}" ]; then
+  kubectl -n "${NAMESPACE}" create secret generic newrelic-license \
+    --from-literal=licenseKey="$(printf '%s' "${license_key}" | base64 --decode)" \
+    --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+  echo "Secret newrelic-license copiado do namespace newrelic."
+else
+  echo "Secret newrelic/newrelic-license não encontrado; os serviços sobem sem APM (rode scripts/academy-sync-secrets.sh newrelic e repita)."
+fi
+
 kubectl apply -k "${PLATFORM_DIR}"
 
 for statefulset in rabbitmq production-mongodb os-postgres billing-postgres saga-postgres; do
