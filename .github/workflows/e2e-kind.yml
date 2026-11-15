@@ -1,0 +1,76 @@
+name: E2E Kubernetes (kind)
+
+# Sobe a plataforma (bancos e RabbitMQ) e os quatro microsserviços, na main de cada um, num cluster kind
+# dentro do runner, com os mesmos manifests do deploy no EKS, e roda os três cenários da saga.
+# Prova que o deploy em Kubernetes funciona sem depender de uma sessão do AWS Academy.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - platform/**
+      - scripts/academy-bootstrap-platform.sh
+      - scripts/kind-e2e.sh
+      - scripts/e2e-saga.sh
+      - .github/workflows/e2e-kind.yml
+  push:
+    branches: [main]
+    paths:
+      - platform/**
+      - scripts/academy-bootstrap-platform.sh
+      - scripts/kind-e2e.sh
+      - scripts/e2e-saga.sh
+      - .github/workflows/e2e-kind.yml
+  schedule:
+    # Toda segunda às 9h (UTC): pega quebras vindas dos repositórios dos serviços.
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-kind-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Saga ponta a ponta no kind
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout car-repair-k8s-infra
+        uses: actions/checkout@v4
+
+      - name: Checkout car-repair-os-service
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/car-repair-os-service
+          path: services/car-repair-os-service
+
+      - name: Checkout car-repair-billing-service
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/car-repair-billing-service
+          path: services/car-repair-billing-service
+
+      - name: Checkout car-repair-production-service
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/car-repair-production-service
+          path: services/car-repair-production-service
+
+      - name: Checkout car-repair-saga-orchestrator
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/car-repair-saga-orchestrator
+          path: services/car-repair-saga-orchestrator
+
+      - name: Criar cluster kind
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: car-repair-e2e
+          wait: 120s
+
+      - name: Subir tudo e rodar a saga
+        run: scripts/kind-e2e.sh services
