@@ -560,6 +560,21 @@ O Academy não tem driver EBS nem IRSA para instalá-lo, e o cluster é recriado
 
    As rotas ficam em `http://<NLB do Kong>/api/...`: `customers`, `vehicles` e `service-orders` (os), `budgets` e `payments` (billing), `work-orders` (production) e `sagas` (saga).
 
+Para conferir a saga no cluster depois do deploy, rode o teste ponta a ponta apontando para o Kong:
+
+```bash
+KONG="http://$(kubectl -n kong get svc -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].hostname}')"
+OS_URL=$KONG BILLING_URL=$KONG PRODUCTION_URL=$KONG SAGA_URL=$KONG scripts/e2e-saga.sh
+```
+
+### Teste ponta a ponta sem o Academy
+
+O workflow **E2E Kubernetes (kind)** sobe um cluster kind dentro do runner do GitHub, aplica `platform/` e os manifests `k8s/overlays/academy-dev` da `main` de cada serviço (os mesmos do EKS) e roda `scripts/e2e-saga.sh` nos três cenários: fluxo feliz, pagamento recusado e falha na execução, conferindo o estado final da OS, do orçamento, do pagamento e da saga. Roda em PRs que mexem na plataforma, toda segunda-feira e pelo botão "Run workflow". Para rodar na sua máquina, com os quatro repositórios dos serviços lado a lado:
+
+```bash
+scripts/kind-e2e.sh ..
+```
+
 Depois disso, cada merge na `main` de um serviço faz o deploy sozinho: o `CD` roda após o CI verde, publica a imagem no ECR com a tag do commit e aplica `k8s/overlays/academy-dev`. Com o lab desligado, o job de deploy só registra um aviso e termina sem falhar.
 
 ## Primeiro deploy DEV
