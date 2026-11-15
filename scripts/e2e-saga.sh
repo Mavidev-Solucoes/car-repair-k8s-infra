@@ -101,18 +101,36 @@ open_service_order() {
         {serviceItemId: $i2, description: "Filtro de ar", price: 40, quantity: 2}]}')" | jq -r '.id'
 }
 
+os_status() {
+  curl -sf "${OS_URL}/api/service-orders/$1" -H "X-User-Id: ${USER_ID}" | jq -r '.status // empty'
+}
+
+budget_status() {
+  curl -sf "${BILLING_URL}/api/budgets" | jq -r --arg so "$1" '[.[] | select(.serviceOrderId == $so)][0].status // empty'
+}
+
+payment_status() {
+  curl -sf "${BILLING_URL}/api/payments" | jq -r --arg so "$1" '[.[] | select(.serviceOrderId == $so)][0].status // empty'
+}
+
+# Os comandos finais da saga (fechar/cancelar OS, cancelar orçamento) são assíncronos: a saga já pode estar
+# Completed/Failed enquanto os serviços ainda processam. Por isso cada estado é aguardado, não lido uma vez.
+wait_status() {
+  local description="$1" expected="$2" getter="$3" service_order_id="$4" actual=""
+  for _ in $(seq 1 "${TIMEOUT_SECONDS}"); do
+    actual="$("${getter}" "${service_order_id}" 2>/dev/null || true)"
+    [[ "${actual}" == "${expected}" ]] && return 0
+    sleep 1
+  done
+  fail "${description} da OS ${service_order_id} está '${actual}' (esperava ${expected})"
+}
+
 assert_final_state() {
   local service_order_id="$1" os_status="$2" budget_status="$3" payment_status="$4"
-  local actual
 
-  actual="$(request GET "${OS_URL}/api/service-orders/${service_order_id}" | jq -r '.status')"
-  [[ "${actual}" == "${os_status}" ]] || fail "OS ${service_order_id} está ${actual} (esperava ${os_status})"
-
-  actual="$(request GET "${BILLING_URL}/api/budgets" | jq -r --arg so "${service_order_id}" '[.[] | select(.serviceOrderId == $so)][0].status')"
-  [[ "${actual}" == "${budget_status}" ]] || fail "orçamento da OS está ${actual} (esperava ${budget_status})"
-
-  actual="$(request GET "${BILLING_URL}/api/payments" | jq -r --arg so "${service_order_id}" '[.[] | select(.serviceOrderId == $so)][0].status')"
-  [[ "${actual}" == "${payment_status}" ]] || fail "pagamento da OS está ${actual} (esperava ${payment_status})"
+  wait_status "status" "${os_status}" os_status "${service_order_id}"
+  wait_status "orçamento" "${budget_status}" budget_status "${service_order_id}"
+  wait_status "pagamento" "${payment_status}" payment_status "${service_order_id}"
 
   echo "  OS ${os_status}, orçamento ${budget_status}, pagamento ${payment_status}"
 }
