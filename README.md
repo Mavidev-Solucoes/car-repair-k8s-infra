@@ -595,7 +595,7 @@ O workflow **E2E Kubernetes (kind)** sobe um cluster kind dentro do runner do Gi
 scripts/kind-e2e.sh ..
 ```
 
-Depois disso, cada merge na `main` de um serviço faz o deploy sozinho: o `CD` roda após o CI verde, publica a imagem no ECR com a tag do commit e aplica `k8s/overlays/academy-dev`. Com o lab desligado, o job de deploy só registra um aviso e termina sem falhar.
+Cada merge na `main` de um serviço faz o deploy sozinho: o `CD` roda após o CI verde e publica a imagem no GHCR. Com o lab ligado, o job **Deploy no EKS (AWS Academy)** publica a imagem no ECR com a tag do commit e aplica `k8s/overlays/academy-dev` no EKS. Com o lab desligado, esse job registra um aviso e o job **Deploy no Kubernetes (kind)** assume: cria um cluster kind no runner, sobe `platform/` com `scripts/academy-bootstrap-platform.sh`, aplica os mesmos manifests com a imagem do commit, aguarda o rollout e roda um smoke test (`/health`, um endpoint da API e o Swagger). Assim todo merge termina com um deploy validado em Kubernetes, mesmo sem o AWS Academy.
 
 ## Primeiro deploy DEV
 

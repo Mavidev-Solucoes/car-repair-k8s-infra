@@ -67,7 +67,7 @@ jobs:
           path: services/car-repair-saga-orchestrator
 
       - name: Criar cluster kind
-        uses: helm/kind-action@v1
+        uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
         with:
           cluster_name: car-repair-e2e
           wait: 120s
