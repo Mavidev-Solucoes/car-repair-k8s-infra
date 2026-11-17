@@ -518,6 +518,56 @@ Ordem recomendada:
 
 O bucket `car-repair-k8s-infra-terraform-state` nunca deve ser destruído automaticamente por esses roots.
 
+## Arquitetura da fase 4
+
+![Arquitetura da fase 4](docs/arquitetura-fase4.svg)
+
+Versão em PNG para o PDF de entrega: [`docs/arquitetura-fase4.png`](docs/arquitetura-fase4.png).
+
+- **Microsserviços** (um repositório cada): `car-repair-os-service`, `car-repair-billing-service`, `car-repair-production-service` e `car-repair-saga-orchestrator`.
+- **Banco por serviço:** PostgreSQL no os, no billing e na saga (dados transacionais e relacionais: OS, orçamento, pagamento e estado da saga); MongoDB no production (a ordem de execução é um documento com itens, etapas e histórico, lido e gravado inteiro). Nenhum serviço acessa o banco de outro.
+- **Comunicação:** REST síncrono pelo Kong para o cliente; entre serviços, só mensageria assíncrona no RabbitMQ: eventos em `car-repair.events`, comandos em `car-repair.commands`.
+- **Saga orquestrada:** o `car-repair-saga-orchestrator` consome os eventos, guarda o estado e o histórico e envia os comandos, inclusive os de compensação.
+
+### Fluxo da saga e compensações
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Cliente
+    participant OS as OS Service
+    participant S as Saga Orchestrator
+    participant B as Billing Service
+    participant MP as Mercado Pago
+    participant P as Production Service
+
+    C->>OS: POST /api/service-orders
+    OS-->>S: ServiceOrderOpened
+    S->>B: CreateBudgetCommand
+    B-->>S: BudgetCreated
+    C->>B: POST /api/budgets/{id}/approve
+    B-->>S: BudgetApproved
+    S->>B: ProcessPaymentCommand
+    B->>MP: cria preferência (Checkout Pro)
+    MP-->>B: webhook: pagamento aprovado
+    B-->>S: PaymentApproved
+    S->>P: CreateWorkOrderCommand
+    C->>P: POST /api/work-orders/{id}/start e /complete
+    P-->>S: WorkCompleted
+    S->>OS: CloseServiceOrderCommand
+
+    Note over S,P: Compensações (rollback)
+    alt orçamento recusado (BudgetRejected)
+        S->>OS: CancelServiceOrderCommand
+    else pagamento recusado (PaymentRejected)
+        S->>B: CancelBudgetCommand
+        S->>OS: CancelServiceOrderCommand
+    else falha na execução (WorkFailed)
+        S->>B: CancelBudgetCommand (estorna o pagamento)
+        S->>OS: CancelServiceOrderCommand
+    end
+```
+
 ## Microsserviços da fase 4 no AWS Academy
 
 Os quatro microsserviços (`car-repair-os-service`, `car-repair-billing-service`, `car-repair-production-service` e `car-repair-saga-orchestrator`) rodam no namespace `car-repair`, junto com as dependências que este repositório sobe em `platform/`:

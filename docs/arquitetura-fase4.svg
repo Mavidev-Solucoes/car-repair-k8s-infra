@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1760 1010" width="1760" height="1010" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="setaMsg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+    <marker id="setaObs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#15803d"/>
+    </marker>
+  </defs>
+
+  <rect width="1760" height="1010" fill="#ffffff"/>
+
+  <!-- Título -->
+  <text x="30" y="44" font-size="26" font-weight="700" fill="#0f172a">Car Repair · Arquitetura da Fase 4</text>
+
+  <!-- Cliente -->
+  <rect x="860" y="96" width="240" height="46" rx="23" fill="#dcfce7" stroke="#15803d" stroke-width="1.5"/>
+  <text x="980" y="125" font-size="16" text-anchor="middle" fill="#14532d">Cliente · Postman · Swagger</text>
+
+  <!-- Cluster -->
+  <rect x="240" y="170" width="1490" height="610" rx="14" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" stroke-dasharray="8 5"/>
+  <text x="262" y="198" font-size="15" font-weight="700" fill="#334155">Kubernetes · namespace car-repair</text>
+
+  <!-- Cliente → Kong -->
+  <line x1="980" y1="142" x2="980" y2="196" stroke="#334155" stroke-width="1.8" marker-end="url(#seta)"/>
+  <rect x="990" y="146" width="96" height="20" fill="#ffffff"/>
+  <text x="996" y="161" font-size="13" fill="#334155">REST /api/...</text>
+
+  <!-- Kong -->
+  <polygon points="880,226 1080,226 1100,252 1080,278 880,278 860,252" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.5"/>
+  <text x="980" y="257" font-size="16" font-weight="700" text-anchor="middle" fill="#3b0764">Kong Ingress</text>
+
+  <!-- Kong → serviços -->
+  <path d="M900,278 C900,300 440,290 440,318" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#seta)"/>
+  <path d="M950,278 C950,300 800,290 800,318" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#seta)"/>
+  <path d="M1010,278 C1010,300 1160,290 1160,318" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#seta)"/>
+  <path d="M1060,278 C1060,300 1520,290 1520,318" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#seta)"/>
+
+  <!-- Serviço: billing -->
+  <g>
+    <rect x="280" y="320" width="320" height="150" rx="10" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+    <rect x="280" y="320" width="320" height="36" rx="10" fill="#e2e8f0"/>
+    <rect x="280" y="346" width="320" height="10" fill="#e2e8f0"/>
+    <text x="440" y="344" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">car-repair-billing-service</text>
+    <text x="300" y="382" font-size="14" fill="#0f172a">Orçamentos e pagamentos</text>
+    <text x="300" y="404" font-size="13" fill="#475569">/api/budgets · /api/payments</text>
+    <text x="300" y="426" font-size="13" fill="#475569">Mercado Pago (Checkout Pro)</text>
+    <text x="300" y="448" font-size="13" fill="#475569">.NET 8 · EF Core</text>
+  </g>
+  <!-- Serviço: os -->
+  <g>
+    <rect x="640" y="320" width="320" height="150" rx="10" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+    <rect x="640" y="320" width="320" height="36" rx="10" fill="#e2e8f0"/>
+    <rect x="640" y="346" width="320" height="10" fill="#e2e8f0"/>
+    <text x="800" y="344" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">car-repair-os-service</text>
+    <text x="660" y="382" font-size="14" fill="#0f172a">Ordens de serviço</text>
+    <text x="660" y="404" font-size="13" fill="#475569">/api/service-orders · /api/customers</text>
+    <text x="660" y="426" font-size="13" fill="#475569">/api/vehicles · status e histórico</text>
+    <text x="660" y="448" font-size="13" fill="#475569">.NET 8 · EF Core</text>
+  </g>
+  <!-- Serviço: saga -->
+  <g>
+    <rect x="1000" y="320" width="320" height="150" rx="10" fill="#ffffff" stroke="#334155" stroke-width="2.2"/>
+    <rect x="1000" y="320" width="320" height="36" rx="10" fill="#fde68a"/>
+    <rect x="1000" y="346" width="320" height="10" fill="#fde68a"/>
+    <text x="1160" y="344" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">car-repair-saga-orchestrator</text>
+    <text x="1020" y="382" font-size="14" fill="#0f172a">Orquestrador da Saga</text>
+    <text x="1020" y="404" font-size="13" fill="#475569">máquina de estados · compensações</text>
+    <text x="1020" y="426" font-size="13" fill="#475569">/api/sagas/{id} (estado e histórico)</text>
+    <text x="1020" y="448" font-size="13" fill="#475569">.NET 8 · EF Core</text>
+  </g>
+  <!-- Serviço: production -->
+  <g>
+    <rect x="1360" y="320" width="320" height="150" rx="10" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+    <rect x="1360" y="320" width="320" height="36" rx="10" fill="#e2e8f0"/>
+    <rect x="1360" y="346" width="320" height="10" fill="#e2e8f0"/>
+    <text x="1520" y="344" font-size="15" font-weight="700" text-anchor="middle" fill="#0f172a">car-repair-production-service</text>
+    <text x="1380" y="382" font-size="14" fill="#0f172a">Execução e produção</text>
+    <text x="1380" y="404" font-size="13" fill="#475569">/api/work-orders</text>
+    <text x="1380" y="426" font-size="13" fill="#475569">fila · diagnóstico · reparo</text>
+    <text x="1380" y="448" font-size="13" fill="#475569">.NET 8 · MongoDB.Driver</text>
+  </g>
+
+  <!-- Bancos (cilindros) -->
+  <g font-size="14" text-anchor="middle">
+    <g>
+      <line x1="500" y1="470" x2="500" y2="506" stroke="#0369a1" stroke-width="1.6"/>
+      <path d="M430,512 v44 a70,12 0 0 0 140,0 v-44" fill="#e0f2fe" stroke="#0369a1" stroke-width="1.5"/>
+      <ellipse cx="500" cy="512" rx="70" ry="12" fill="#bae6fd" stroke="#0369a1" stroke-width="1.5"/>
+      <text x="500" y="546" fill="#0c4a6e" font-weight="700">PostgreSQL</text>
+      <text x="500" y="590" fill="#0369a1" font-size="12">billing-postgres</text>
+    </g>
+    <g>
+      <line x1="860" y1="470" x2="860" y2="506" stroke="#0369a1" stroke-width="1.6"/>
+      <path d="M790,512 v44 a70,12 0 0 0 140,0 v-44" fill="#e0f2fe" stroke="#0369a1" stroke-width="1.5"/>
+      <ellipse cx="860" cy="512" rx="70" ry="12" fill="#bae6fd" stroke="#0369a1" stroke-width="1.5"/>
+      <text x="860" y="546" fill="#0c4a6e" font-weight="700">PostgreSQL</text>
+      <text x="860" y="590" fill="#0369a1" font-size="12">os-postgres</text>
+    </g>
+    <g>
+      <line x1="1220" y1="470" x2="1220" y2="506" stroke="#0369a1" stroke-width="1.6"/>
+      <path d="M1150,512 v44 a70,12 0 0 0 140,0 v-44" fill="#e0f2fe" stroke="#0369a1" stroke-width="1.5"/>
+      <ellipse cx="1220" cy="512" rx="70" ry="12" fill="#bae6fd" stroke="#0369a1" stroke-width="1.5"/>
+      <text x="1220" y="546" fill="#0c4a6e" font-weight="700">PostgreSQL</text>
+      <text x="1220" y="590" fill="#0369a1" font-size="12">saga-postgres</text>
+    </g>
+    <g>
+      <line x1="1580" y1="470" x2="1580" y2="506" stroke="#15803d" stroke-width="1.6"/>
+      <path d="M1510,512 v44 a70,12 0 0 0 140,0 v-44" fill="#dcfce7" stroke="#15803d" stroke-width="1.5"/>
+      <ellipse cx="1580" cy="512" rx="70" ry="12" fill="#bbf7d0" stroke="#15803d" stroke-width="1.5"/>
+      <text x="1580" y="546" fill="#14532d" font-weight="700">MongoDB</text>
+      <text x="1580" y="590" fill="#15803d" font-size="12">production-mongodb (NoSQL)</text>
+    </g>
+  </g>
+
+  <!-- Mensageria: serviços ↔ RabbitMQ -->
+  <g stroke="#c2410c" stroke-width="1.8" stroke-dasharray="6 4" fill="none">
+    <line x1="320" y1="472" x2="320" y2="652" marker-start="url(#setaMsg)" marker-end="url(#setaMsg)"/>
+    <line x1="680" y1="472" x2="680" y2="652" marker-start="url(#setaMsg)" marker-end="url(#setaMsg)"/>
+    <line x1="1040" y1="472" x2="1040" y2="652" marker-start="url(#setaMsg)" marker-end="url(#setaMsg)"/>
+    <line x1="1400" y1="472" x2="1400" y2="652" marker-start="url(#setaMsg)" marker-end="url(#setaMsg)"/>
+  </g>
+
+  <!-- RabbitMQ -->
+  <rect x="280" y="654" width="1400" height="100" rx="10" fill="#ffedd5" stroke="#c2410c" stroke-width="1.6"/>
+  <text x="300" y="682" font-size="16" font-weight="700" fill="#7c2d12">RabbitMQ</text>
+  <text x="300" y="708" font-size="14" fill="#7c2d12">exchange car-repair.events — os, billing e production publicam eventos (ServiceOrderOpened, BudgetApproved, PaymentApproved, WorkCompleted, WorkFailed…) → fila da saga</text>
+  <text x="300" y="732" font-size="14" fill="#7c2d12">exchange car-repair.commands — a saga publica comandos (CreateBudget, ProcessPayment, CreateWorkOrder, CloseServiceOrder, CancelBudget, CancelServiceOrder) → fila de cada serviço · retry e DLQ</text>
+
+  <!-- Mercado Pago -->
+  <rect x="30" y="350" width="170" height="90" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="1.5"/>
+  <text x="115" y="388" font-size="16" font-weight="700" text-anchor="middle" fill="#14532d">Mercado Pago</text>
+  <text x="115" y="412" font-size="13" text-anchor="middle" fill="#14532d">Checkout Pro</text>
+  <line x1="202" y1="395" x2="278" y2="395" stroke="#334155" stroke-width="1.6" marker-start="url(#seta)" marker-end="url(#seta)"/>
+  <text x="30" y="466" font-size="12" fill="#475569">preferência · consulta · estorno</text>
+  <text x="30" y="484" font-size="12" fill="#475569">webhook assinado (x-signature)</text>
+
+  <!-- Observabilidade -->
+  <rect x="1250" y="836" width="480" height="140" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="1.5"/>
+  <text x="1270" y="866" font-size="16" font-weight="700" fill="#14532d">New Relic</text>
+  <text x="1270" y="892" font-size="13" fill="#14532d">APM: agente .NET em cada serviço</text>
+  <text x="1270" y="914" font-size="13" fill="#14532d">Trace distribuído: traceparent/tracestate nas mensagens</text>
+  <text x="1270" y="936" font-size="13" fill="#14532d">Atributo correlationId (id da OS) em toda transação</text>
+  <text x="1270" y="958" font-size="13" fill="#14532d">nri-bundle: métricas, eventos e logs do cluster</text>
+  <line x1="1490" y1="782" x2="1490" y2="832" stroke="#15803d" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#setaObs)"/>
+
+  <!-- CI/CD -->
+  <rect x="30" y="836" width="1190" height="140" rx="14" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+  <text x="50" y="866" font-size="16" font-weight="700" fill="#0f172a">CI/CD independente por repositório (GitHub Actions) · main protegida (PR + checks)</text>
+  <g font-size="13" fill="#0f172a">
+    <rect x="50" y="888" width="150" height="64" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="125" y="916" text-anchor="middle">Build</text>
+    <text x="125" y="936" text-anchor="middle" fill="#475569">.NET 8</text>
+    <rect x="225" y="888" width="200" height="64" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="325" y="916" text-anchor="middle">Testes · BDD (Reqnroll)</text>
+    <text x="325" y="936" text-anchor="middle" fill="#475569">cobertura ≥ 80%</text>
+    <rect x="450" y="888" width="170" height="64" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="535" y="916" text-anchor="middle">SonarCloud</text>
+    <text x="535" y="936" text-anchor="middle" fill="#475569">quality gate</text>
+    <rect x="645" y="888" width="170" height="64" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="730" y="916" text-anchor="middle">Imagem Docker</text>
+    <text x="730" y="936" text-anchor="middle" fill="#475569">GHCR · ECR</text>
+    <rect x="840" y="888" width="360" height="64" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="1020" y="916" text-anchor="middle">Deploy em Kubernetes</text>
+    <text x="1020" y="936" text-anchor="middle" fill="#475569">EKS ou kind · rollout · smoke test</text>
+  </g>
+  <g stroke="#334155" stroke-width="1.6">
+    <line x1="200" y1="920" x2="222" y2="920" marker-end="url(#seta)"/>
+    <line x1="425" y1="920" x2="447" y2="920" marker-end="url(#seta)"/>
+    <line x1="620" y1="920" x2="642" y2="920" marker-end="url(#seta)"/>
+    <line x1="815" y1="920" x2="837" y2="920" marker-end="url(#seta)"/>
+  </g>
+  <line x1="1020" y1="886" x2="1020" y2="784" stroke="#334155" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#seta)"/>
+</svg>
